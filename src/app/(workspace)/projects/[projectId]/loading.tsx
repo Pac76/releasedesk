@@ -1,11 +1,15 @@
-export default function ProjectDetailLoading() {
+import { localize } from "@/lib/i18n/locale";
+import { getLocale } from "@/lib/i18n/server";
+
+export default async function ProjectDetailLoading() {
+  const locale = await getLocale();
   return (
     <main
       className="project-detail-content"
       aria-busy="true"
       aria-live="polite"
     >
-      <span className="sr-only">Cargando proyecto y trabajo…</span>
+      <span className="sr-only">{localize(locale, { en: "Loading project and work…", es: "Cargando proyecto y trabajo…" })}</span>
       <div className="projects-loading-heading">
         <span className="loading-line loading-line-short" />
         <span className="loading-line loading-line-title" />

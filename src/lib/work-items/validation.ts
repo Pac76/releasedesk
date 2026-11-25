@@ -1,4 +1,5 @@
 import { isValidIsoDate } from "@/lib/projects/validation";
+import { localize, type Locale } from "@/lib/i18n/locale";
 
 export const WORK_ITEM_STATUSES = [
   "backlog",
@@ -112,6 +113,7 @@ export function nextWorkItemStatus(
 
 export function validateWorkItemInput(
   formData: FormData,
+  locale: Locale = "en",
 ): WorkItemValidationResult {
   const title = readText(formData, "title").trim();
   const rawDescription = readText(formData, "description").trim();
@@ -121,23 +123,38 @@ export function validateWorkItemInput(
   const errors: WorkItemFieldErrors = {};
 
   if (characterLength(title) < 1 || characterLength(title) > 120) {
-    errors.title = "El título debe tener entre 1 y 120 caracteres.";
+    errors.title = localize(locale, {
+      en: "Title must be between 1 and 120 characters.",
+      es: "El título debe tener entre 1 y 120 caracteres.",
+    });
   }
 
   if (characterLength(rawDescription) > 2000) {
-    errors.description = "La descripción puede tener hasta 2000 caracteres.";
+    errors.description = localize(locale, {
+      en: "Description can be up to 2,000 characters.",
+      es: "La descripción puede tener hasta 2000 caracteres.",
+    });
   }
 
   if (!isWorkItemStatus(rawStatus)) {
-    errors.status = "Elegí un estado válido.";
+    errors.status = localize(locale, {
+      en: "Choose a valid status.",
+      es: "Elegí un estado válido.",
+    });
   }
 
   if (!isWorkItemPriority(rawPriority)) {
-    errors.priority = "Elegí una prioridad válida.";
+    errors.priority = localize(locale, {
+      en: "Choose a valid priority.",
+      es: "Elegí una prioridad válida.",
+    });
   }
 
   if (rawDueDate && !isValidIsoDate(rawDueDate)) {
-    errors.dueDate = "Ingresá una fecha válida con formato AAAA-MM-DD.";
+    errors.dueDate = localize(locale, {
+      en: "Enter a valid date in YYYY-MM-DD format.",
+      es: "Ingresá una fecha válida con formato AAAA-MM-DD.",
+    });
   }
 
   if (Object.keys(errors).length > 0) {

@@ -48,7 +48,7 @@ describe("ProjectsPage", () => {
     expect(eq).toHaveBeenCalledWith("owner_id", ownerId);
     expect(order).toHaveBeenCalledWith("created_at", { ascending: false });
     expect(
-      screen.getByRole("heading", { name: /todavía no hay proyectos/i }),
+      screen.getByRole("heading", { name: /no projects yet/i }),
     ).toBeInTheDocument();
   });
 
@@ -78,7 +78,7 @@ describe("ProjectsPage", () => {
     expect(
       screen.getByRole("heading", { name: "Production launch" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Sin descripción.")).toBeInTheDocument();
+    expect(screen.getByText("No description.")).toBeInTheDocument();
   });
 
   it("throws a safe error when the provider query fails", async () => {

@@ -23,6 +23,7 @@ Each completed increment gets a truthful record under `docs/agent-runs/` contain
 5. `RD-005` — work-item CRUD, filters, quick status changes, and dashboard metrics.
 6. `RD-006` — responsive/accessibility hardening, documentation, browser verification, and production deployment.
 7. `RD-007` — public GitHub repository sync, immutable health snapshots, and evidence-backed readiness policy.
+8. `RD-008` — add complete English and Spanish product copy with a persistent language control, without changing business behavior.
 
 Each increment goes through Develop -> Testing -> Orchestrator. A rejected review is useful only when genuine; never introduce a deliberate defect.
 

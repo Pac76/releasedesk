@@ -11,8 +11,7 @@ export function sanitizeNextPath(
     !candidate.startsWith("/") ||
     candidate.startsWith("//") ||
     candidate.includes("\\") ||
-    CONTROL_CHARACTER_PATTERN.test(candidate) ||
-    ENCODED_PATH_SEPARATOR_PATTERN.test(candidate)
+    CONTROL_CHARACTER_PATTERN.test(candidate)
   ) {
     return fallback;
   }
@@ -22,7 +21,8 @@ export function sanitizeNextPath(
     if (
       parsed.origin !== "https://releasedesk.local" ||
       parsed.pathname.startsWith("//") ||
-      parsed.pathname.includes("\\")
+      parsed.pathname.includes("\\") ||
+      ENCODED_PATH_SEPARATOR_PATTERN.test(parsed.pathname)
     ) {
       return fallback;
     }

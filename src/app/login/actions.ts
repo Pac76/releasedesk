@@ -13,12 +13,18 @@ import {
   sanitizeNextPath,
 } from "@/lib/auth/redirects";
 import { createClient } from "@/lib/supabase/server";
+import { localize } from "@/lib/i18n/locale";
+import { getLocale } from "@/lib/i18n/server";
 
-const SETUP_STATE: AuthActionState = {
-  message:
-    "Falta conectar Supabase. Configurá las variables públicas para habilitar el acceso.",
-  status: "setup",
-};
+function setupState(locale: Awaited<ReturnType<typeof getLocale>>): AuthActionState {
+  return {
+    message: localize(locale, {
+      en: "Supabase is not connected. Configure the public environment variables to enable access.",
+      es: "Falta conectar Supabase. Configurá las variables públicas para habilitar el acceso.",
+    }),
+    status: "setup",
+  };
+}
 
 function readNextPath(formData: FormData): string {
   const next = formData.get("next");
@@ -30,12 +36,16 @@ export async function signInAction(
   formData: FormData,
 ): Promise<AuthActionState> {
   void previousState;
-  const validation = validateCredentials(formData);
+  const locale = await getLocale();
+  const validation = validateCredentials(formData, locale);
 
   if (!validation.success) {
     return {
       fieldErrors: validation.errors,
-      message: "Revisá los campos marcados.",
+      message: localize(locale, {
+        en: "Review the highlighted fields.",
+        es: "Revisá los campos marcados.",
+      }),
       status: "error",
     };
   }
@@ -44,7 +54,7 @@ export async function signInAction(
   try {
     supabase = await createClient();
   } catch {
-    return SETUP_STATE;
+    return setupState(locale);
   }
 
   try {
@@ -52,13 +62,13 @@ export async function signInAction(
 
     if (error) {
       return {
-        message: mapAuthError("sign-in", error),
+        message: mapAuthError("sign-in", error, locale),
         status: "error",
       };
     }
   } catch {
     return {
-      message: mapAuthError("sign-in", undefined),
+      message: mapAuthError("sign-in", undefined, locale),
       status: "error",
     };
   }
@@ -71,12 +81,16 @@ export async function signUpAction(
   formData: FormData,
 ): Promise<AuthActionState> {
   void previousState;
-  const validation = validateCredentials(formData);
+  const locale = await getLocale();
+  const validation = validateCredentials(formData, locale);
 
   if (!validation.success) {
     return {
       fieldErrors: validation.errors,
-      message: "Revisá los campos marcados.",
+      message: localize(locale, {
+        en: "Review the highlighted fields.",
+        es: "Revisá los campos marcados.",
+      }),
       status: "error",
     };
   }
@@ -85,7 +99,7 @@ export async function signUpAction(
   try {
     supabase = await createClient();
   } catch {
-    return SETUP_STATE;
+    return setupState(locale);
   }
 
   let hasSession = false;
@@ -100,7 +114,7 @@ export async function signUpAction(
 
     if (error) {
       return {
-        message: mapAuthError("sign-up", error),
+        message: mapAuthError("sign-up", error, locale),
         status: "error",
       };
     }
@@ -108,7 +122,7 @@ export async function signUpAction(
     hasSession = Boolean(data.session);
   } catch {
     return {
-      message: mapAuthError("sign-up", undefined),
+      message: mapAuthError("sign-up", undefined, locale),
       status: "error",
     };
   }
@@ -118,8 +132,10 @@ export async function signUpAction(
   }
 
   return {
-    message:
-      "Revisá tu correo y confirmá la cuenta desde el enlace que te enviamos.",
+    message: localize(locale, {
+      en: "Check your email and confirm your account using the link we sent.",
+      es: "Revisá tu correo y confirmá la cuenta desde el enlace que te enviamos.",
+    }),
     status: "success",
   };
 }

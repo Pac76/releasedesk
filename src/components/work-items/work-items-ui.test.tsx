@@ -42,18 +42,18 @@ describe("work-item UI", () => {
       />,
     );
 
-    expect(screen.getByLabelText("Título")).toBeRequired();
-    expect(screen.getByLabelText("Título")).toHaveAttribute(
+    expect(screen.getByLabelText("Title")).toBeRequired();
+    expect(screen.getByLabelText("Title")).toHaveAttribute(
       "maxlength",
       "120",
     );
-    expect(screen.getByLabelText("Descripción")).toHaveAttribute(
+    expect(screen.getByLabelText("Description")).toHaveAttribute(
       "maxlength",
       "2000",
     );
-    expect(screen.getByLabelText("Estado")).toHaveValue("backlog");
-    expect(screen.getByLabelText("Prioridad")).toHaveValue("medium");
-    expect(screen.getByLabelText("Fecha límite")).toHaveAttribute(
+    expect(screen.getByLabelText("Status")).toHaveValue("backlog");
+    expect(screen.getByLabelText("Priority")).toHaveValue("medium");
+    expect(screen.getByLabelText("Due date")).toHaveAttribute(
       "type",
       "date",
     );
@@ -73,15 +73,15 @@ describe("work-item UI", () => {
     );
 
     const card = screen.getByRole("listitem");
-    expect(within(card).getByText("Vencido")).toBeInTheDocument();
-    expect(within(card).getByText(/venció/i)).toBeInTheDocument();
+    expect(within(card).getByText("Overdue")).toBeInTheDocument();
+    expect(within(card).getByText(/was due/i)).toBeInTheDocument();
     expect(
-      within(card).getByRole("button", { name: /avanzar a listo/i }),
+      within(card).getByRole("button", { name: /move to ready/i }),
     ).toBeEnabled();
-    expect(within(card).getByText("Prioridad alta")).toBeInTheDocument();
-    expect(within(card).getByText("Editar trabajo")).toBeInTheDocument();
+    expect(within(card).getByText("Priority high")).toBeInTheDocument();
+    expect(within(card).getByText("Edit work item")).toBeInTheDocument();
     expect(
-      within(card).getByRole("button", { name: /eliminar trabajo/i }),
+      within(card).getByRole("button", { name: /delete work item/i }),
     ).toBeInTheDocument();
   });
 
@@ -98,8 +98,8 @@ describe("work-item UI", () => {
       />,
     );
 
-    expect(screen.queryByText("Vencido")).not.toBeInTheDocument();
-    expect(screen.getByText("Listo para entregar")).toBeInTheDocument();
+    expect(screen.queryByText("Overdue")).not.toBeInTheDocument();
+    expect(screen.getByText("Ready to release")).toBeInTheDocument();
   });
 
   it("renders a filtered empty state and a clear-filter link", () => {
@@ -115,7 +115,7 @@ describe("work-item UI", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: /no hay trabajo con estos filtros/i }),
+      screen.getByRole("heading", { name: /no work items match these filters/i }),
     ).toBeInTheDocument();
 
     rerender(
@@ -125,9 +125,9 @@ describe("work-item UI", () => {
       />,
     );
 
-    expect(screen.getByLabelText("Estado")).toHaveValue("review");
-    expect(screen.getByLabelText("Prioridad")).toHaveValue("high");
-    expect(screen.getByRole("link", { name: /limpiar filtros/i })).toHaveAttribute(
+    expect(screen.getByLabelText("Status")).toHaveValue("review");
+    expect(screen.getByLabelText("Priority")).toHaveValue("high");
+    expect(screen.getByRole("link", { name: /clear filters/i })).toHaveAttribute(
       "href",
       `/projects/${projectId}`,
     );
@@ -146,7 +146,7 @@ describe("work-item UI", () => {
 
     fireEvent.submit(
       screen
-        .getByRole("button", { name: /eliminar trabajo/i })
+        .getByRole("button", { name: /delete work item/i })
         .closest("form")!,
     );
 

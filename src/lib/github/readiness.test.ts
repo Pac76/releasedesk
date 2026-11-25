@@ -22,6 +22,15 @@ describe("repository readiness policy", () => {
     expect(evaluateReadiness(base, now).verdict).toBe("ready");
   });
 
+  it("localizes the same deterministic evidence in Spanish", () => {
+    const assessment = evaluateReadiness(base, now, "es");
+
+    expect(assessment.label).toBe("Listo");
+    expect(assessment.evidence).toContain(
+      "El último workflow terminó correctamente.",
+    );
+  });
+
   it.each([
     [{ ...base, open_pull_requests: 1 }, "at_risk"],
     [{ ...base, open_issues: 2 }, "at_risk"],

@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { AuthForm } from "@/app/login/auth-form";
+import { LocaleProvider } from "@/components/locale-provider";
 import type { AuthActionState } from "@/lib/auth/validation";
 
 const action = vi.fn(
@@ -18,15 +19,15 @@ describe("AuthForm", () => {
       />,
     );
 
-    expect(screen.getByLabelText(/correo electrónico/i)).toHaveAttribute(
+    expect(screen.getByLabelText(/email address/i)).toHaveAttribute(
       "autocomplete",
       "email",
     );
-    expect(screen.getByLabelText(/contraseña/i)).toHaveAttribute(
+    expect(screen.getByLabelText(/password/i)).toHaveAttribute(
       "autocomplete",
       "current-password",
     );
-    expect(screen.getByRole("button", { name: "Ingresar" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled();
     expect(document.querySelector('input[name="next"]')).toHaveValue(
       "/dashboard",
     );
@@ -41,12 +42,24 @@ describe("AuthForm", () => {
       />,
     );
 
-    expect(screen.getByLabelText(/contraseña/i)).toHaveAttribute(
+    expect(screen.getByLabelText(/password/i)).toHaveAttribute(
       "autocomplete",
       "new-password",
     );
     expect(
-      screen.getByRole("button", { name: "Crear cuenta" }),
+      screen.getByRole("button", { name: "Create account" }),
     ).toBeEnabled();
+  });
+
+  it("preserves the complete Spanish form copy when selected", () => {
+    render(
+      <LocaleProvider locale="es">
+        <AuthForm action={action} nextPath="/dashboard" variant="sign-in" />
+      </LocaleProvider>,
+    );
+
+    expect(screen.getByLabelText("Correo electrónico")).toBeInTheDocument();
+    expect(screen.getByLabelText("Contraseña")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ingresar" })).toBeEnabled();
   });
 });

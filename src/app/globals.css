@@ -65,6 +65,64 @@ a {
   justify-content: space-between;
 }
 
+.header-actions,
+.dashboard-mobile-actions {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+}
+
+.language-switcher {
+  align-items: center;
+  color: var(--ink-soft);
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 800;
+  gap: 5px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.language-switcher button {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  min-height: 32px;
+  padding: 4px 2px 2px;
+}
+
+.language-switcher button:hover,
+.language-switcher button:focus-visible {
+  color: var(--ink);
+}
+
+.language-switcher button[aria-pressed="true"] {
+  border-bottom-color: var(--accent);
+  color: var(--ink);
+}
+
+.language-switcher-inverse {
+  color: #bdc9cc;
+}
+
+.language-switcher-inverse button:hover,
+.language-switcher-inverse button:focus-visible,
+.language-switcher-inverse button[aria-pressed="true"] {
+  color: var(--white);
+}
+
+.workspace-language-control {
+  margin-bottom: 12px;
+  margin-top: auto;
+}
+
+.workspace-language-control + .dashboard-account {
+  margin-top: 0;
+}
+
 .brand-link {
   align-items: center;
   display: inline-flex;
@@ -701,6 +759,13 @@ a {
 
 .auth-brand {
   align-self: flex-start;
+}
+
+.auth-brand-row {
+  align-items: center;
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
 }
 
 .auth-brand .brand-mark {

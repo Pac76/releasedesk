@@ -10,28 +10,28 @@ import HomePage from "@/app/page";
 import LoginPage from "@/app/login/page";
 
 describe("ReleaseDesk public experience", () => {
-  it("explains the product with a semantic primary journey", () => {
-    render(<HomePage />);
+  it("explains the product with a semantic primary journey", async () => {
+    render(await HomePage());
 
-    expect(screen.getByRole("heading", { level: 1, name: /señales de github/i })).toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: /navegación principal/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /crear mi espacio/i })).toHaveAttribute("href", "/login");
-    expect(screen.getByRole("list", { name: /señales del repositorio/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: /github signals/i })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: /primary navigation/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /create my workspace/i })).toHaveAttribute("href", "/login");
+    expect(screen.getByRole("list", { name: /repository signals/i })).toBeInTheDocument();
     expect(screen.getByText("acme/checkout")).toBeInTheDocument();
   });
 
-  it("presents all four release stages in order", () => {
-    render(<HomePage />);
+  it("presents all four release stages in order", async () => {
+    render(await HomePage());
 
-    const stageList = screen.getByRole("list", { name: /etapas de una entrega/i });
+    const stageList = screen.getByRole("list", { name: /release stages/i });
     const items = within(stageList).getAllByRole("listitem");
 
     expect(items).toHaveLength(4);
     expect(items.map((item) => within(item).getByRole("heading", { level: 3 }).textContent)).toEqual([
       "Backlog",
-      "En curso",
-      "Revisión",
-      "Listo",
+      "In progress",
+      "Review",
+      "Ready",
     ]);
   });
 
@@ -41,10 +41,10 @@ describe("ReleaseDesk public experience", () => {
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: /tu próxima entrega empieza con una señal clara/i,
+        name: /your next release starts with a clear signal/i,
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/conexión pendiente/i)).toBeInTheDocument();
+    expect(screen.getByText(/connection required/i)).toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   });
 });

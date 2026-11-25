@@ -6,7 +6,7 @@ ReleaseDesk is a focused release-readiness workspace for individual software mak
 
 ReleaseDesk also acts as a project-operations control plane for independent developers. A project can connect to a public GitHub repository, capture repository-health snapshots, and produce an evidence-backed readiness verdict. Repository intelligence is derived from external signals rather than manually imitating another task list.
 
-The UI is Spanish. Code, identifiers, commits, and technical documentation are English.
+The UI supports natural US English and Spanish. English is the default for new visitors, and a visible language control preserves the user's choice across public, authentication, and protected routes. Code, identifiers, commits, and technical documentation are English.
 
 ## Stack
 

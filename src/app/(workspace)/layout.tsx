@@ -4,19 +4,37 @@ import type { ReactNode } from "react";
 
 import { signOutAction } from "@/app/login/actions";
 import { BrandMark } from "@/components/brand-mark";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { WorkspaceNavigation } from "@/components/workspace-navigation";
 import { getVerifiedAuth } from "@/lib/auth/verified-user";
+import { localize } from "@/lib/i18n/locale";
+import { getLocale } from "@/lib/i18n/server";
 
 type WorkspaceLayoutProps = Readonly<{ children: ReactNode }>;
 
 export default async function WorkspaceLayout({
   children,
 }: WorkspaceLayoutProps) {
-  const auth = await getVerifiedAuth();
+  const [auth, locale] = await Promise.all([getVerifiedAuth(), getLocale()]);
 
   if (!auth) {
     redirect("/login");
   }
+
+  const copy = localize(locale, {
+    en: {
+      brandLabel: "ReleaseDesk dashboard",
+      signOut: "Sign out",
+      unknownAccount: "Verified account",
+      verified: "Verified session",
+    },
+    es: {
+      brandLabel: "ReleaseDesk, panel principal",
+      signOut: "Cerrar sesión",
+      unknownAccount: "Cuenta verificada",
+      verified: "Sesión verificada",
+    },
+  });
 
   return (
     <div className="dashboard-shell">
@@ -24,7 +42,7 @@ export default async function WorkspaceLayout({
         <Link
           className="brand-link dashboard-brand"
           href="/dashboard"
-          aria-label="ReleaseDesk, panel principal"
+          aria-label={copy.brandLabel}
         >
           <BrandMark className="brand-mark" />
           <span>ReleaseDesk</span>
@@ -32,12 +50,16 @@ export default async function WorkspaceLayout({
 
         <WorkspaceNavigation />
 
+        <LanguageSwitcher className="language-switcher-inverse workspace-language-control" />
+
         <div className="dashboard-account">
-          <span>Sesión verificada</span>
-          <strong title={auth.email}>{auth.email}</strong>
+          <span>{copy.verified}</span>
+          <strong title={auth.email || copy.unknownAccount}>
+            {auth.email || copy.unknownAccount}
+          </strong>
           <form action={signOutAction}>
             <button className="dashboard-signout" type="submit">
-              Cerrar sesión
+              {copy.signOut}
             </button>
           </form>
         </div>
@@ -49,11 +71,14 @@ export default async function WorkspaceLayout({
             <BrandMark className="brand-mark" />
             <span>ReleaseDesk</span>
           </Link>
-          <form action={signOutAction}>
-            <button className="dashboard-signout" type="submit">
-              Salir
-            </button>
-          </form>
+          <div className="dashboard-mobile-actions">
+            <LanguageSwitcher className="language-switcher-inverse" />
+            <form action={signOutAction}>
+              <button className="dashboard-signout" type="submit">
+                {copy.signOut}
+              </button>
+            </form>
+          </div>
         </header>
         <WorkspaceNavigation mobile />
         {children}

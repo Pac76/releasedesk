@@ -46,8 +46,8 @@ describe("project input validation", () => {
 
     expect(result).toEqual({
       errors: {
-        description: "La descripción puede tener hasta 500 caracteres.",
-        name: "El nombre debe tener entre 1 y 80 caracteres.",
+        description: "Description can be up to 500 characters.",
+        name: "Name must be between 1 and 80 characters.",
       },
       success: false,
     });

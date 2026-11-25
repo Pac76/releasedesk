@@ -98,13 +98,13 @@ describe("DashboardPage", () => {
 
     render(await DashboardPage());
 
-    const metrics = screen.getByRole("region", { name: /métricas de entrega/i });
-    expect(within(metrics).getByText("Proyectos").nextElementSibling).toHaveTextContent("2");
-    expect(within(metrics).getByText("Trabajo total").nextElementSibling).toHaveTextContent("8");
-    expect(within(metrics).getByText("En curso").nextElementSibling).toHaveTextContent("3");
-    expect(within(metrics).getByText("En revisión").nextElementSibling).toHaveTextContent("2");
-    expect(within(metrics).getByText("Listos").nextElementSibling).toHaveTextContent("1");
-    expect(within(metrics).getByText("Vencidos").nextElementSibling).toHaveTextContent("1");
+    const metrics = screen.getByRole("region", { name: /release metrics/i });
+    expect(within(metrics).getByText("Projects").nextElementSibling).toHaveTextContent("2");
+    expect(within(metrics).getByText("Total work").nextElementSibling).toHaveTextContent("8");
+    expect(within(metrics).getByText("In progress").nextElementSibling).toHaveTextContent("3");
+    expect(within(metrics).getByText("In review").nextElementSibling).toHaveTextContent("2");
+    expect(within(metrics).getByText("Ready").nextElementSibling).toHaveTextContent("1");
+    expect(within(metrics).getByText("Overdue").nextElementSibling).toHaveTextContent("1");
     expect(screen.getByRole("link", { name: "Confirm release notes" })).toHaveAttribute(
       "href",
       `/projects/${projectId}`,

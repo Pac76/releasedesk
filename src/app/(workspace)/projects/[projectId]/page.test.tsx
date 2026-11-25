@@ -174,8 +174,8 @@ describe("ProjectDetailPage", () => {
     }));
 
     expect(screen.getByRole("link", { name: "owner/repo" })).toHaveAttribute("href", "https://github.com/owner/repo");
-    expect(screen.getByText("Listo", { selector: ".readiness-verdict" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /por qué releasedesk decide/i })).toBeInTheDocument();
+    expect(screen.getByText("Ready", { selector: ".readiness-verdict" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /why releasedesk decides/i })).toBeInTheDocument();
   });
 
   it("ignores invalid URL filters without changing authorization filters", async () => {
@@ -288,8 +288,8 @@ describe("ProjectDetailPage", () => {
         }),
       );
 
-      expect(screen.queryByText("Vencido")).not.toBeInTheDocument();
-      expect(screen.getByText(/^fecha límite ·/i)).toBeInTheDocument();
+      expect(screen.queryByText("Overdue")).not.toBeInTheDocument();
+      expect(screen.getByText(/^due date ·/i)).toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }

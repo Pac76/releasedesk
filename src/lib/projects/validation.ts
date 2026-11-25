@@ -1,3 +1,5 @@
+import { localize, type Locale } from "@/lib/i18n/locale";
+
 export type ProjectFieldErrors = {
   description?: string;
   name?: string;
@@ -52,6 +54,7 @@ export function isValidIsoDate(value: string): boolean {
 
 export function validateProjectInput(
   formData: FormData,
+  locale: Locale = "en",
 ): ProjectValidationResult {
   const name = readText(formData, "name").trim();
   const rawDescription = readText(formData, "description").trim();
@@ -59,15 +62,24 @@ export function validateProjectInput(
   const errors: ProjectFieldErrors = {};
 
   if (characterLength(name) < 1 || characterLength(name) > 80) {
-    errors.name = "El nombre debe tener entre 1 y 80 caracteres.";
+    errors.name = localize(locale, {
+      en: "Name must be between 1 and 80 characters.",
+      es: "El nombre debe tener entre 1 y 80 caracteres.",
+    });
   }
 
   if (characterLength(rawDescription) > 500) {
-    errors.description = "La descripción puede tener hasta 500 caracteres.";
+    errors.description = localize(locale, {
+      en: "Description can be up to 500 characters.",
+      es: "La descripción puede tener hasta 500 caracteres.",
+    });
   }
 
   if (rawTargetDate && !isValidIsoDate(rawTargetDate)) {
-    errors.targetDate = "Ingresá una fecha válida con formato AAAA-MM-DD.";
+    errors.targetDate = localize(locale, {
+      en: "Enter a valid date in YYYY-MM-DD format.",
+      es: "Ingresá una fecha válida con formato AAAA-MM-DD.",
+    });
   }
 
   if (Object.keys(errors).length > 0) {

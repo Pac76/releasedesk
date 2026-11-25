@@ -23,7 +23,7 @@ Do not run Develop and Testing concurrently on the same change. Testing is read-
 ## Engineering rules
 
 - Next.js App Router, strict TypeScript, React Server Components by default, and Tailwind CSS.
-- UI copy is Spanish. Code, identifiers, commits, and technical documentation are English.
+- UI copy supports natural US English and Spanish, with English as the default for new visitors. Code, identifiers, commits, and technical documentation are English.
 - Keep server-only code and secrets out of client components.
 - Use Supabase SSR cookie clients and verified server-side auth. Do not trust an unverified cookie session.
 - Validate and normalize every write on the server.

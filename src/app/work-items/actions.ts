@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 
 import { getVerifiedAuth } from "@/lib/auth/verified-user";
+import { localize, type Locale } from "@/lib/i18n/locale";
+import { getLocale } from "@/lib/i18n/server";
 import { isValidUuid } from "@/lib/projects/validation";
 import type { WorkItemActionState } from "@/lib/work-items/action-state";
 import {
@@ -11,20 +13,54 @@ import {
   validateWorkItemInput,
 } from "@/lib/work-items/validation";
 
-const SESSION_ERROR: WorkItemActionState = {
-  message: "Tu sesión ya no es válida. Volvé a ingresar.",
-  status: "error",
-};
+function getActionCopy(locale: Locale) {
+  return localize(locale, {
+    en: {
+      created: "Work item created.",
+      createError: "We couldn't create the work item. Try again.",
+      deleted: "Work item deleted.",
+      deleteError: "We couldn't delete the work item. Try again.",
+      itemUnavailable: "We couldn't find this work item, or it is no longer available.",
+      projectUnavailable: "We couldn't find this project, or it is no longer available.",
+      projectVerifyError: "We couldn't verify the project. Try again.",
+      saveError: "We couldn't save your changes. Try again.",
+      sessionError: "Your session is no longer valid. Sign in again.",
+      statusError: "We couldn't change the status. Try again.",
+      statusInvalid: "Choose a valid status.",
+      statusUpdated: "Status updated.",
+      updated: "Work item updated.",
+      validationError: "Review the highlighted fields.",
+    },
+    es: {
+      created: "Elemento de trabajo creado.",
+      createError: "No pudimos crear el elemento de trabajo. Intentá nuevamente.",
+      deleted: "Elemento de trabajo eliminado.",
+      deleteError: "No pudimos eliminar el elemento de trabajo. Intentá nuevamente.",
+      itemUnavailable: "No encontramos el elemento de trabajo o ya no está disponible.",
+      projectUnavailable: "No encontramos el proyecto o ya no está disponible.",
+      projectVerifyError: "No pudimos verificar el proyecto. Intentá nuevamente.",
+      saveError: "No pudimos guardar los cambios. Intentá nuevamente.",
+      sessionError: "Tu sesión ya no es válida. Volvé a ingresar.",
+      statusError: "No pudimos cambiar el estado. Intentá nuevamente.",
+      statusInvalid: "Seleccioná un estado válido.",
+      statusUpdated: "Estado actualizado.",
+      updated: "Elemento de trabajo actualizado.",
+      validationError: "Revisá los campos marcados.",
+    },
+  });
+}
 
-const PROJECT_UNAVAILABLE: WorkItemActionState = {
-  message: "No encontramos el proyecto o ya no está disponible.",
-  status: "error",
-};
+function sessionError(locale: Locale): WorkItemActionState {
+  return { message: getActionCopy(locale).sessionError, status: "error" };
+}
 
-const ITEM_UNAVAILABLE: WorkItemActionState = {
-  message: "No encontramos el trabajo o ya no está disponible.",
-  status: "error",
-};
+function projectUnavailable(locale: Locale): WorkItemActionState {
+  return { message: getActionCopy(locale).projectUnavailable, status: "error" };
+}
+
+function itemUnavailable(locale: Locale): WorkItemActionState {
+  return { message: getActionCopy(locale).itemUnavailable, status: "error" };
+}
 
 function uuidFrom(formData: FormData, key: string): string | null {
   const value = formData.get(key);
@@ -33,10 +69,11 @@ function uuidFrom(formData: FormData, key: string): string | null {
 
 function validationError(
   fieldErrors: WorkItemFieldErrors,
+  locale: Locale,
 ): WorkItemActionState {
   return {
     fieldErrors,
-    message: "Revisá los campos marcados.",
+    message: getActionCopy(locale).validationError,
     status: "error",
   };
 }
@@ -51,19 +88,21 @@ export async function createWorkItemAction(
   formData: FormData,
 ): Promise<WorkItemActionState> {
   void previousState;
+  const locale = await getLocale();
+  const copy = getActionCopy(locale);
   const auth = await getVerifiedAuth();
   if (!auth) {
-    return SESSION_ERROR;
+    return sessionError(locale);
   }
 
   const projectId = uuidFrom(formData, "project_id");
   if (!projectId) {
-    return PROJECT_UNAVAILABLE;
+    return projectUnavailable(locale);
   }
 
-  const validation = validateWorkItemInput(formData);
+  const validation = validateWorkItemInput(formData, locale);
   if (!validation.success) {
-    return validationError(validation.errors);
+    return validationError(validation.errors, locale);
   }
 
   try {
@@ -76,13 +115,13 @@ export async function createWorkItemAction(
 
     if (projectError) {
       return {
-        message: "No pudimos comprobar el proyecto. Intentá nuevamente.",
+        message: copy.projectVerifyError,
         status: "error",
       };
     }
 
     if (!projectRows || projectRows.length !== 1) {
-      return PROJECT_UNAVAILABLE;
+      return projectUnavailable(locale);
     }
 
     const { error } = await auth.supabase.from("work_items").insert({
@@ -93,19 +132,19 @@ export async function createWorkItemAction(
 
     if (error) {
       return {
-        message: "No pudimos crear el trabajo. Intentá nuevamente.",
+        message: copy.createError,
         status: "error",
       };
     }
   } catch {
     return {
-      message: "No pudimos crear el trabajo. Intentá nuevamente.",
+      message: copy.createError,
       status: "error",
     };
   }
 
   refreshWorkItemViews(projectId);
-  return { message: "Trabajo creado.", status: "success" };
+  return { message: copy.created, status: "success" };
 }
 
 export async function updateWorkItemAction(
@@ -113,20 +152,22 @@ export async function updateWorkItemAction(
   formData: FormData,
 ): Promise<WorkItemActionState> {
   void previousState;
+  const locale = await getLocale();
+  const copy = getActionCopy(locale);
   const auth = await getVerifiedAuth();
   if (!auth) {
-    return SESSION_ERROR;
+    return sessionError(locale);
   }
 
   const projectId = uuidFrom(formData, "project_id");
   const workItemId = uuidFrom(formData, "work_item_id");
   if (!projectId || !workItemId) {
-    return ITEM_UNAVAILABLE;
+    return itemUnavailable(locale);
   }
 
-  const validation = validateWorkItemInput(formData);
+  const validation = validateWorkItemInput(formData, locale);
   if (!validation.success) {
-    return validationError(validation.errors);
+    return validationError(validation.errors, locale);
   }
 
   try {
@@ -140,23 +181,23 @@ export async function updateWorkItemAction(
 
     if (error) {
       return {
-        message: "No pudimos guardar los cambios. Intentá nuevamente.",
+        message: copy.saveError,
         status: "error",
       };
     }
 
     if (!data || data.length !== 1) {
-      return ITEM_UNAVAILABLE;
+      return itemUnavailable(locale);
     }
   } catch {
     return {
-      message: "No pudimos guardar los cambios. Intentá nuevamente.",
+      message: copy.saveError,
       status: "error",
     };
   }
 
   refreshWorkItemViews(projectId);
-  return { message: "Trabajo actualizado.", status: "success" };
+  return { message: copy.updated, status: "success" };
 }
 
 export async function deleteWorkItemAction(
@@ -164,15 +205,17 @@ export async function deleteWorkItemAction(
   formData: FormData,
 ): Promise<WorkItemActionState> {
   void previousState;
+  const locale = await getLocale();
+  const copy = getActionCopy(locale);
   const auth = await getVerifiedAuth();
   if (!auth) {
-    return SESSION_ERROR;
+    return sessionError(locale);
   }
 
   const projectId = uuidFrom(formData, "project_id");
   const workItemId = uuidFrom(formData, "work_item_id");
   if (!projectId || !workItemId) {
-    return ITEM_UNAVAILABLE;
+    return itemUnavailable(locale);
   }
 
   try {
@@ -186,23 +229,23 @@ export async function deleteWorkItemAction(
 
     if (error) {
       return {
-        message: "No pudimos eliminar el trabajo. Intentá nuevamente.",
+        message: copy.deleteError,
         status: "error",
       };
     }
 
     if (!data || data.length !== 1) {
-      return ITEM_UNAVAILABLE;
+      return itemUnavailable(locale);
     }
   } catch {
     return {
-      message: "No pudimos eliminar el trabajo. Intentá nuevamente.",
+      message: copy.deleteError,
       status: "error",
     };
   }
 
   refreshWorkItemViews(projectId);
-  return { message: "Trabajo eliminado.", status: "success" };
+  return { message: copy.deleted, status: "success" };
 }
 
 export async function changeWorkItemStatusAction(
@@ -210,20 +253,22 @@ export async function changeWorkItemStatusAction(
   formData: FormData,
 ): Promise<WorkItemActionState> {
   void previousState;
+  const locale = await getLocale();
+  const copy = getActionCopy(locale);
   const auth = await getVerifiedAuth();
   if (!auth) {
-    return SESSION_ERROR;
+    return sessionError(locale);
   }
 
   const projectId = uuidFrom(formData, "project_id");
   const workItemId = uuidFrom(formData, "work_item_id");
   const statusValue = formData.get("status");
   if (!projectId || !workItemId) {
-    return ITEM_UNAVAILABLE;
+    return itemUnavailable(locale);
   }
 
   if (typeof statusValue !== "string" || !isWorkItemStatus(statusValue)) {
-    return validationError({ status: "Elegí un estado válido." });
+    return validationError({ status: copy.statusInvalid }, locale);
   }
 
   try {
@@ -237,21 +282,21 @@ export async function changeWorkItemStatusAction(
 
     if (error) {
       return {
-        message: "No pudimos cambiar el estado. Intentá nuevamente.",
+        message: copy.statusError,
         status: "error",
       };
     }
 
     if (!data || data.length !== 1) {
-      return ITEM_UNAVAILABLE;
+      return itemUnavailable(locale);
     }
   } catch {
     return {
-      message: "No pudimos cambiar el estado. Intentá nuevamente.",
+      message: copy.statusError,
       status: "error",
     };
   }
 
   refreshWorkItemViews(projectId);
-  return { message: "Estado actualizado.", status: "success" };
+  return { message: copy.statusUpdated, status: "success" };
 }

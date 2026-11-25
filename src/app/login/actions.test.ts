@@ -20,6 +20,7 @@ import {
   signUpAction,
 } from "@/app/login/actions";
 import { INITIAL_AUTH_STATE } from "@/lib/auth/validation";
+import { getLocale } from "@/lib/i18n/server";
 
 class RedirectSignal extends Error {
   constructor(readonly destination: string) {
@@ -60,8 +61,8 @@ describe("authentication server actions", () => {
 
     expect(state.status).toBe("error");
     expect(state.fieldErrors).toEqual({
-      email: "Ingresá un correo electrónico válido.",
-      password: "La contraseña debe tener entre 8 y 128 caracteres.",
+      email: "Enter a valid email address.",
+      password: "Password must be between 8 and 128 characters.",
     });
     expect(mocks.createClient).not.toHaveBeenCalled();
   });
@@ -76,8 +77,22 @@ describe("authentication server actions", () => {
 
     const state = await signInAction(INITIAL_AUTH_STATE, formData());
 
-    expect(state.message).toMatch(/no pudimos iniciar sesión/i);
+    expect(state.message).toMatch(/couldn't sign you in/i);
     expect(state.message).not.toContain("private provider detail");
+  });
+
+  it("returns server-action validation feedback in Spanish when selected", async () => {
+    vi.mocked(getLocale).mockResolvedValueOnce("es");
+
+    const state = await signInAction(
+      INITIAL_AUTH_STATE,
+      formData("/dashboard", "invalid", "short"),
+    );
+
+    expect(state.fieldErrors).toEqual({
+      email: "Ingresá un correo electrónico válido.",
+      password: "La contraseña debe tener entre 8 y 128 caracteres.",
+    });
   });
 
   it("normalizes credentials and rejects an unsafe post-login redirect", async () => {
@@ -105,8 +120,7 @@ describe("authentication server actions", () => {
     const state = await signUpAction(INITIAL_AUTH_STATE, formData());
 
     expect(state).toEqual({
-      message:
-        "Revisá tu correo y confirmá la cuenta desde el enlace que te enviamos.",
+      message: "Check your email and confirm your account using the link we sent.",
       status: "success",
     });
     expect(signUp).toHaveBeenCalledWith(

@@ -34,9 +34,9 @@ describe("project CRUD UI", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: /todavía no hay proyectos/i }),
+      screen.getByRole("heading", { name: /no projects yet/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/solo vos vas a poder leerlo/i)).toBeInTheDocument();
+    expect(screen.getByText(/only you will be able/i)).toBeInTheDocument();
   });
 
   it("renders project data and accessible edit controls", () => {
@@ -53,26 +53,26 @@ describe("project CRUD UI", () => {
     expect(
       within(card).getAllByText(project.description ?? "")[0],
     ).toBeInTheDocument();
-    expect(within(card).getByText(/30.*nov.*2026/i)).toBeInTheDocument();
-    expect(within(card).getByText(/editar proyecto/i)).toBeInTheDocument();
-    expect(within(card).getByRole("button", { name: /eliminar proyecto/i })).toBeInTheDocument();
+    expect(within(card).getByText(/nov.*30.*2026/i)).toBeInTheDocument();
+    expect(within(card).getByText(/edit project/i)).toBeInTheDocument();
+    expect(within(card).getByRole("button", { name: /delete project/i })).toBeInTheDocument();
   });
 
   it("provides labeled create fields with native constraints", () => {
     render(<ProjectForm action={idleAction} variant="create" />);
 
-    expect(screen.getByLabelText("Nombre")).toHaveAttribute("maxlength", "80");
-    expect(screen.getByLabelText("Nombre")).toBeRequired();
-    expect(screen.getByLabelText("Descripción")).toHaveAttribute(
+    expect(screen.getByLabelText("Name")).toHaveAttribute("maxlength", "80");
+    expect(screen.getByLabelText("Name")).toBeRequired();
+    expect(screen.getByLabelText("Description")).toHaveAttribute(
       "maxlength",
       "500",
     );
-    expect(screen.getByLabelText("Fecha objetivo")).toHaveAttribute(
+    expect(screen.getByLabelText("Target date")).toHaveAttribute(
       "type",
       "date",
     );
     expect(
-      screen.getByRole("button", { name: "Crear proyecto" }),
+      screen.getByRole("button", { name: "Create project" }),
     ).toBeEnabled();
   });
 
@@ -86,7 +86,7 @@ describe("project CRUD UI", () => {
       />,
     );
 
-    fireEvent.submit(screen.getByRole("button", { name: /eliminar proyecto/i }).closest("form")!);
+    fireEvent.submit(screen.getByRole("button", { name: /delete project/i }).closest("form")!);
 
     expect(confirm).toHaveBeenCalledWith(
       expect.stringContaining(project.name),

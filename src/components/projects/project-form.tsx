@@ -2,6 +2,8 @@
 
 import { useActionState } from "react";
 
+import { useLocale } from "@/components/locale-provider";
+import { localize } from "@/lib/i18n/locale";
 import {
   INITIAL_PROJECT_ACTION_STATE,
   type ProjectActionState,
@@ -39,6 +41,31 @@ function ProjectFeedback({ state }: { state: ProjectActionState }) {
 }
 
 export function ProjectForm({ action, project, variant }: ProjectFormProps) {
+  const locale = useLocale();
+  const copy = localize(locale, {
+    en: {
+      create: "Create project",
+      description: "Description",
+      descriptionHelp: "Optional · up to 500 characters.",
+      descriptionPlaceholder: "What must be ready for this release to be considered successful.",
+      name: "Name",
+      namePlaceholder: "November release",
+      save: "Save changes",
+      saving: "Saving…",
+      targetDate: "Target date",
+    },
+    es: {
+      create: "Crear proyecto",
+      description: "Descripción",
+      descriptionHelp: "Opcional · hasta 500 caracteres.",
+      descriptionPlaceholder: "Qué tiene que estar listo para considerar exitosa esta entrega.",
+      name: "Nombre",
+      namePlaceholder: "Lanzamiento de noviembre",
+      save: "Guardar cambios",
+      saving: "Guardando…",
+      targetDate: "Fecha objetivo",
+    },
+  });
   const [state, formAction, pending] = useActionState(
     action,
     INITIAL_PROJECT_ACTION_STATE,
@@ -53,7 +80,7 @@ export function ProjectForm({ action, project, variant }: ProjectFormProps) {
       ) : null}
 
       <div className="project-field project-field-name">
-        <label htmlFor={`${prefix}-name`}>Nombre</label>
+        <label htmlFor={`${prefix}-name`}>{copy.name}</label>
         <input
           aria-describedby={
             state.fieldErrors?.name ? `${prefix}-name-error` : undefined
@@ -63,7 +90,7 @@ export function ProjectForm({ action, project, variant }: ProjectFormProps) {
           id={`${prefix}-name`}
           maxLength={80}
           name="name"
-          placeholder="Lanzamiento de noviembre"
+          placeholder={copy.namePlaceholder}
           required
         />
         {state.fieldErrors?.name ? (
@@ -74,7 +101,7 @@ export function ProjectForm({ action, project, variant }: ProjectFormProps) {
       </div>
 
       <div className="project-field project-field-date">
-        <label htmlFor={`${prefix}-target-date`}>Fecha objetivo</label>
+        <label htmlFor={`${prefix}-target-date`}>{copy.targetDate}</label>
         <input
           aria-describedby={
             state.fieldErrors?.targetDate
@@ -95,7 +122,7 @@ export function ProjectForm({ action, project, variant }: ProjectFormProps) {
       </div>
 
       <div className="project-field project-field-description">
-        <label htmlFor={`${prefix}-description`}>Descripción</label>
+        <label htmlFor={`${prefix}-description`}>{copy.description}</label>
         <textarea
           aria-describedby={`${prefix}-description-help${
             state.fieldErrors?.description
@@ -107,11 +134,11 @@ export function ProjectForm({ action, project, variant }: ProjectFormProps) {
           id={`${prefix}-description`}
           maxLength={500}
           name="description"
-          placeholder="Qué tiene que estar listo para considerar exitosa esta entrega."
+          placeholder={copy.descriptionPlaceholder}
           rows={isEditing ? 3 : 4}
         />
         <span className="field-help" id={`${prefix}-description-help`}>
-          Opcional · hasta 500 caracteres.
+          {copy.descriptionHelp}
         </span>
         {state.fieldErrors?.description ? (
           <span className="field-error" id={`${prefix}-description-error`}>
@@ -126,11 +153,7 @@ export function ProjectForm({ action, project, variant }: ProjectFormProps) {
         disabled={pending}
         type="submit"
       >
-        {pending
-          ? "Guardando…"
-          : isEditing
-            ? "Guardar cambios"
-            : "Crear proyecto"}
+        {pending ? copy.saving : isEditing ? copy.save : copy.create}
       </button>
     </form>
   );

@@ -80,7 +80,7 @@ describe("work-item server actions", () => {
       workForm(),
     );
 
-    expect(state.message).toMatch(/sesión ya no es válida/i);
+    expect(state.message).toMatch(/session is no longer valid/i);
     expect(state.status).toBe("error");
   });
 
@@ -127,7 +127,7 @@ describe("work-item server actions", () => {
       workForm(),
     );
 
-    expect(state.message).toMatch(/proyecto.*disponible/i);
+    expect(state.message).toMatch(/project.*available/i);
     expect(insert).not.toHaveBeenCalled();
   });
 
@@ -169,8 +169,8 @@ describe("work-item server actions", () => {
       workForm({ status: "shipping" }),
     );
 
-    expect(malformed.message).toMatch(/trabajo.*disponible/i);
-    expect(invalidStatus.fieldErrors?.status).toMatch(/estado válido/i);
+    expect(malformed.message).toMatch(/work item.*available/i);
+    expect(invalidStatus.fieldErrors?.status).toMatch(/valid status/i);
     expect(from).not.toHaveBeenCalled();
   });
 
@@ -183,7 +183,7 @@ describe("work-item server actions", () => {
       workForm({ title: " " }),
     );
 
-    expect(state.fieldErrors?.title).toMatch(/1 y 120/i);
+    expect(state.fieldErrors?.title).toMatch(/1 and 120/i);
     expect(from).not.toHaveBeenCalled();
   });
 
@@ -197,7 +197,7 @@ describe("work-item server actions", () => {
       workForm(),
     );
 
-    expect(state.message).toMatch(/trabajo.*disponible/i);
+    expect(state.message).toMatch(/work item.*available/i);
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -211,7 +211,7 @@ describe("work-item server actions", () => {
     );
 
     expect(state.message).toBe(
-      "No pudimos comprobar el proyecto. Intentá nuevamente.",
+      "We couldn't verify the project. Try again.",
     );
     expect(state.message).not.toContain("private");
   });
@@ -230,7 +230,7 @@ describe("work-item server actions", () => {
     );
 
     expect(state.message).toBe(
-      "No pudimos cambiar el estado. Intentá nuevamente.",
+      "We couldn't change the status. Try again.",
     );
     expect(state.message).not.toContain("private RLS detail");
   });

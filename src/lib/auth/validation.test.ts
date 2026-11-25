@@ -25,8 +25,8 @@ describe("authentication input validation", () => {
   it("returns field-specific errors for invalid credentials", () => {
     expect(validateCredentials(credentials("not-an-email", "short"))).toEqual({
       errors: {
-        email: "Ingresá un correo electrónico válido.",
-        password: "La contraseña debe tener entre 8 y 128 caracteres.",
+        email: "Enter a valid email address.",
+        password: "Password must be between 8 and 128 characters.",
       },
       success: false,
     });
@@ -39,10 +39,10 @@ describe("authentication input validation", () => {
       message: providerMessage,
     });
 
-    expect(message).toBe("No pudimos validar esas credenciales.");
+    expect(message).toBe("We couldn't verify those credentials.");
     expect(message).not.toContain(providerMessage);
     expect(
       mapAuthError("sign-up", { code: "over_email_send_rate_limit" }),
-    ).toMatch(/demasiados intentos/i);
+    ).toMatch(/too many attempts/i);
   });
 });

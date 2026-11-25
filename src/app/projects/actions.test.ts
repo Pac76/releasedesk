@@ -75,7 +75,7 @@ describe("project server actions", () => {
     const state = await action(INITIAL_PROJECT_ACTION_STATE, data);
 
     expect(state).toEqual({
-      message: "Tu sesión ya no es válida. Volvé a ingresar.",
+      message: "Your session is no longer valid. Sign in again.",
       status: "error",
     });
   });
@@ -110,7 +110,7 @@ describe("project server actions", () => {
       projectForm({ name: " " }),
     );
 
-    expect(state.fieldErrors?.name).toMatch(/1 y 80/i);
+    expect(state.fieldErrors?.name).toMatch(/1 and 80/i);
     expect(from).not.toHaveBeenCalled();
   });
 
@@ -162,7 +162,7 @@ describe("project server actions", () => {
       projectForm({ project_id: "not-a-uuid" }),
     );
 
-    expect(state.message).toMatch(/no encontramos el proyecto/i);
+    expect(state.message).toMatch(/couldn't find this project/i);
     expect(from).not.toHaveBeenCalled();
   });
 
@@ -178,13 +178,13 @@ describe("project server actions", () => {
     );
 
     expect(state).toEqual({
-      message: "No encontramos el proyecto o ya no está disponible.",
+      message: "We couldn't find this project, or it is no longer available.",
       status: "error",
     });
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 
-  it("maps provider errors to safe Spanish feedback", async () => {
+  it("maps provider errors to safe English feedback", async () => {
     const insert = vi.fn().mockResolvedValue({
       error: { message: "private database policy detail" },
     });
@@ -197,7 +197,7 @@ describe("project server actions", () => {
     );
 
     expect(state.message).toBe(
-      "No pudimos crear el proyecto. Intentá nuevamente.",
+      "We couldn't create the project. Try again.",
     );
     expect(state.message).not.toContain("private database policy detail");
   });
@@ -255,12 +255,12 @@ describe("project server actions", () => {
     const state = await syncRepositoryAction(INITIAL_REPOSITORY_SYNC_STATE, data);
 
     expect(state.status).toBe("error");
-    expect(state.fieldError).toMatch(/formato público/i);
+    expect(state.fieldError).toMatch(/public owner\/repository format/i);
     expect(from).not.toHaveBeenCalled();
     expect(mocks.fetchPublicRepositorySnapshot).not.toHaveBeenCalled();
   });
 
-  it("maps GitHub rate limits to safe Spanish feedback without persisting", async () => {
+  it("maps GitHub rate limits to safe English feedback without persisting", async () => {
     const limit = vi.fn().mockResolvedValue({ data: [{ id: projectId }], error: null });
     const ownerEq = vi.fn().mockReturnValue({ limit });
     const idEq = vi.fn().mockReturnValue({ eq: ownerEq });
@@ -279,7 +279,7 @@ describe("project server actions", () => {
 
     const state = await syncRepositoryAction(INITIAL_REPOSITORY_SYNC_STATE, data);
 
-    expect(state.message).toMatch(/límite de consultas/i);
+    expect(state.message).toMatch(/request limit/i);
     expect(state.message).not.toContain("rate_limited");
     expect(rpc).not.toHaveBeenCalled();
   });

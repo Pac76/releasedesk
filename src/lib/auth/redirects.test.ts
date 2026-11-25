@@ -13,6 +13,12 @@ describe("authentication redirect safety", () => {
     );
   });
 
+  it("keeps encoded internal paths inside query values", () => {
+    expect(sanitizeNextPath("/login?next=%2Fprojects")).toBe(
+      "/login?next=%2Fprojects",
+    );
+  });
+
   it.each([
     "https://attacker.example/steal",
     "//attacker.example/steal",

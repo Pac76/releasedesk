@@ -9,6 +9,8 @@ import {
 } from "@/lib/github/client";
 import type { RepositorySyncActionState } from "@/lib/github/action-state";
 import { validateRepositoryFullName } from "@/lib/github/validation";
+import { localize, type Locale } from "@/lib/i18n/locale";
+import { getLocale } from "@/lib/i18n/server";
 import type { ProjectActionState } from "@/lib/projects/action-state";
 import {
   isValidUuid,
@@ -16,25 +18,67 @@ import {
   validateProjectInput,
 } from "@/lib/projects/validation";
 
-const SESSION_ERROR: ProjectActionState = {
-  message: "Tu sesión ya no es válida. Volvé a ingresar.",
-  status: "error",
-};
+function getActionCopy(locale: Locale) {
+  return localize(locale, {
+    en: {
+      createError: "We couldn't create the project. Try again.",
+      created: "Project created.",
+      deleteError: "We couldn't delete the project. Try again.",
+      deleted: "Project deleted.",
+      githubNotFound: "We couldn't find that public repository on GitHub.",
+      githubRateLimited: "GitHub's request limit has been reached. Try again later.",
+      githubUnavailable: "We couldn't reach GitHub right now. Try again.",
+      projectNotFound: "We couldn't find this project, or it is no longer available.",
+      repositoryReview: "Review the repository name.",
+      saveError: "We couldn't save your changes. Try again.",
+      sessionError: "Your session is no longer valid. Sign in again.",
+      snapshotError: "We read GitHub successfully, but couldn't save the snapshot. Try again.",
+      syncError: "We couldn't sync the repository. Try again.",
+      synced: "Repository synced and a new snapshot was saved.",
+      updated: "Project updated.",
+      validationError: "Review the highlighted fields.",
+    },
+    es: {
+      createError: "No pudimos crear el proyecto. Intentá nuevamente.",
+      created: "Proyecto creado.",
+      deleteError: "No pudimos eliminar el proyecto. Intentá nuevamente.",
+      deleted: "Proyecto eliminado.",
+      githubNotFound: "No encontramos ese repositorio público en GitHub.",
+      githubRateLimited: "GitHub alcanzó el límite de consultas. Intentá nuevamente más tarde.",
+      githubUnavailable: "No pudimos consultar GitHub en este momento. Intentá nuevamente.",
+      projectNotFound: "No encontramos el proyecto o ya no está disponible.",
+      repositoryReview: "Revisá el repositorio indicado.",
+      saveError: "No pudimos guardar los cambios. Intentá nuevamente.",
+      sessionError: "Tu sesión ya no es válida. Volvé a ingresar.",
+      snapshotError: "Leímos GitHub, pero no pudimos guardar la captura. Intentá nuevamente.",
+      syncError: "No pudimos sincronizar el repositorio. Intentá nuevamente.",
+      synced: "Repositorio sincronizado con una nueva captura.",
+      updated: "Proyecto actualizado.",
+      validationError: "Revisá los campos marcados.",
+    },
+  });
+}
 
-const PROJECT_NOT_FOUND: ProjectActionState = {
-  message: "No encontramos el proyecto o ya no está disponible.",
-  status: "error",
-};
+function sessionError(locale: Locale): { message: string; status: "error" } {
+  return { message: getActionCopy(locale).sessionError, status: "error" };
+}
+
+function projectNotFound(locale: Locale): { message: string; status: "error" } {
+  return { message: getActionCopy(locale).projectNotFound, status: "error" };
+}
 
 function projectIdFrom(formData: FormData): string | null {
   const value = formData.get("project_id");
   return typeof value === "string" && isValidUuid(value) ? value : null;
 }
 
-function validationError(fieldErrors: ProjectFieldErrors): ProjectActionState {
+function validationError(
+  fieldErrors: ProjectFieldErrors,
+  locale: Locale,
+): ProjectActionState {
   return {
     fieldErrors,
-    message: "Revisá los campos marcados.",
+    message: getActionCopy(locale).validationError,
     status: "error",
   };
 }
@@ -49,14 +93,16 @@ export async function createProjectAction(
   formData: FormData,
 ): Promise<ProjectActionState> {
   void previousState;
+  const locale = await getLocale();
+  const copy = getActionCopy(locale);
   const auth = await getVerifiedAuth();
   if (!auth) {
-    return SESSION_ERROR;
+    return sessionError(locale);
   }
 
-  const validation = validateProjectInput(formData);
+  const validation = validateProjectInput(formData, locale);
   if (!validation.success) {
-    return validationError(validation.errors);
+    return validationError(validation.errors, locale);
   }
 
   try {
@@ -67,19 +113,19 @@ export async function createProjectAction(
 
     if (error) {
       return {
-        message: "No pudimos crear el proyecto. Intentá nuevamente.",
+        message: copy.createError,
         status: "error",
       };
     }
   } catch {
     return {
-      message: "No pudimos crear el proyecto. Intentá nuevamente.",
+      message: copy.createError,
       status: "error",
     };
   }
 
   refreshProjectViews();
-  return { message: "Proyecto creado.", status: "success" };
+  return { message: copy.created, status: "success" };
 }
 
 export async function updateProjectAction(
@@ -87,19 +133,21 @@ export async function updateProjectAction(
   formData: FormData,
 ): Promise<ProjectActionState> {
   void previousState;
+  const locale = await getLocale();
+  const copy = getActionCopy(locale);
   const auth = await getVerifiedAuth();
   if (!auth) {
-    return SESSION_ERROR;
+    return sessionError(locale);
   }
 
   const projectId = projectIdFrom(formData);
   if (!projectId) {
-    return PROJECT_NOT_FOUND;
+    return projectNotFound(locale);
   }
 
-  const validation = validateProjectInput(formData);
+  const validation = validateProjectInput(formData, locale);
   if (!validation.success) {
-    return validationError(validation.errors);
+    return validationError(validation.errors, locale);
   }
 
   try {
@@ -112,23 +160,23 @@ export async function updateProjectAction(
 
     if (error) {
       return {
-        message: "No pudimos guardar los cambios. Intentá nuevamente.",
+        message: copy.saveError,
         status: "error",
       };
     }
 
     if (!data || data.length !== 1) {
-      return PROJECT_NOT_FOUND;
+      return projectNotFound(locale);
     }
   } catch {
     return {
-      message: "No pudimos guardar los cambios. Intentá nuevamente.",
+      message: copy.saveError,
       status: "error",
     };
   }
 
   refreshProjectViews();
-  return { message: "Proyecto actualizado.", status: "success" };
+  return { message: copy.updated, status: "success" };
 }
 
 export async function deleteProjectAction(
@@ -136,14 +184,16 @@ export async function deleteProjectAction(
   formData: FormData,
 ): Promise<ProjectActionState> {
   void previousState;
+  const locale = await getLocale();
+  const copy = getActionCopy(locale);
   const auth = await getVerifiedAuth();
   if (!auth) {
-    return SESSION_ERROR;
+    return sessionError(locale);
   }
 
   const projectId = projectIdFrom(formData);
   if (!projectId) {
-    return PROJECT_NOT_FOUND;
+    return projectNotFound(locale);
   }
 
   try {
@@ -156,23 +206,23 @@ export async function deleteProjectAction(
 
     if (error) {
       return {
-        message: "No pudimos eliminar el proyecto. Intentá nuevamente.",
+        message: copy.deleteError,
         status: "error",
       };
     }
 
     if (!data || data.length !== 1) {
-      return PROJECT_NOT_FOUND;
+      return projectNotFound(locale);
     }
   } catch {
     return {
-      message: "No pudimos eliminar el proyecto. Intentá nuevamente.",
+      message: copy.deleteError,
       status: "error",
     };
   }
 
   refreshProjectViews();
-  return { message: "Proyecto eliminado.", status: "success" };
+  return { message: copy.deleted, status: "success" };
 }
 
 export async function syncRepositoryAction(
@@ -180,21 +230,26 @@ export async function syncRepositoryAction(
   formData: FormData,
 ): Promise<RepositorySyncActionState> {
   void previousState;
+  const locale = await getLocale();
+  const copy = getActionCopy(locale);
   const auth = await getVerifiedAuth();
   if (!auth) {
-    return { message: "Tu sesión ya no es válida. Volvé a ingresar.", status: "error" };
+    return sessionError(locale);
   }
 
   const projectId = projectIdFrom(formData);
   if (!projectId) {
-    return { message: "No encontramos el proyecto o ya no está disponible.", status: "error" };
+    return projectNotFound(locale);
   }
 
-  const repository = validateRepositoryFullName(formData.get("repository_full_name"));
+  const repository = validateRepositoryFullName(
+    formData.get("repository_full_name"),
+    locale,
+  );
   if (!repository.success) {
     return {
       fieldError: repository.error,
-      message: "Revisá el repositorio indicado.",
+      message: copy.repositoryReview,
       status: "error",
     };
   }
@@ -208,7 +263,7 @@ export async function syncRepositoryAction(
       .limit(1);
 
     if (projectError || !projects || projects.length !== 1) {
-      return { message: "No encontramos el proyecto o ya no está disponible.", status: "error" };
+      return projectNotFound(locale);
     }
 
     const snapshot = await fetchPublicRepositorySnapshot(repository.value);
@@ -225,26 +280,26 @@ export async function syncRepositoryAction(
 
     if (error) {
       return {
-        message: "Leímos GitHub, pero no pudimos guardar la captura. Intentá nuevamente.",
+        message: copy.snapshotError,
         status: "error",
       };
     }
   } catch (error) {
     if (error instanceof GitHubClientError) {
       const messages = {
-        not_found: "No encontramos ese repositorio público en GitHub.",
-        rate_limited: "GitHub alcanzó el límite de consultas. Intentá nuevamente más tarde.",
-        unavailable: "No pudimos consultar GitHub en este momento. Intentá nuevamente.",
+        not_found: copy.githubNotFound,
+        rate_limited: copy.githubRateLimited,
+        unavailable: copy.githubUnavailable,
       } as const;
       return { message: messages[error.code], status: "error" };
     }
     return {
-      message: "No pudimos sincronizar el repositorio. Intentá nuevamente.",
+      message: copy.syncError,
       status: "error",
     };
   }
 
   revalidatePath(`/projects/${projectId}`);
   revalidatePath("/dashboard");
-  return { message: "Repositorio sincronizado con una nueva captura.", status: "success" };
+  return { message: copy.synced, status: "success" };
 }

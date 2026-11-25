@@ -3,6 +3,8 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
+import { useLocale } from "@/components/locale-provider";
+import { localize } from "@/lib/i18n/locale";
 import {
   INITIAL_AUTH_STATE,
   type AuthActionState,
@@ -21,7 +23,12 @@ type AuthFormProps = {
 
 function SubmitButton({ variant }: Pick<AuthFormProps, "variant">) {
   const { pending } = useFormStatus();
-  const idleLabel = variant === "sign-in" ? "Ingresar" : "Crear cuenta";
+  const locale = useLocale();
+  const copy = localize(locale, {
+    en: { pending: "Processing…", signIn: "Sign in", signUp: "Create account" },
+    es: { pending: "Procesando…", signIn: "Ingresar", signUp: "Crear cuenta" },
+  });
+  const idleLabel = variant === "sign-in" ? copy.signIn : copy.signUp;
 
   return (
     <button
@@ -29,7 +36,7 @@ function SubmitButton({ variant }: Pick<AuthFormProps, "variant">) {
       disabled={pending}
       type="submit"
     >
-      {pending ? "Procesando…" : idleLabel}
+      {pending ? copy.pending : idleLabel}
     </button>
   );
 }
@@ -53,6 +60,29 @@ export function AuthForm({ action, nextPath, variant }: AuthFormProps) {
   const [state, formAction] = useActionState(action, INITIAL_AUTH_STATE);
   const isSignIn = variant === "sign-in";
   const prefix = isSignIn ? "sign-in" : "sign-up";
+  const locale = useLocale();
+  const copy = localize(locale, {
+    en: {
+      email: "Email address",
+      emailPlaceholder: "you@example.com",
+      password: "Password",
+      passwordHelp: "Between 8 and 128 characters.",
+      signInDescription: "Take control of your next release.",
+      signInHeading: "Sign in to your workspace",
+      signUpDescription: "Start with a private workspace for your projects.",
+      signUpHeading: "Create your account",
+    },
+    es: {
+      email: "Correo electrónico",
+      emailPlaceholder: "vos@ejemplo.com",
+      password: "Contraseña",
+      passwordHelp: "Entre 8 y 128 caracteres.",
+      signInDescription: "Retomá el control de tu próxima entrega.",
+      signInHeading: "Ingresá a tu espacio",
+      signUpDescription: "Empezá con un espacio privado para tus proyectos.",
+      signUpHeading: "Creá tu cuenta",
+    },
+  });
 
   return (
     <form action={formAction} className="auth-form">
@@ -62,17 +92,17 @@ export function AuthForm({ action, nextPath, variant }: AuthFormProps) {
           {isSignIn ? "01" : "02"}
         </p>
         <div>
-          <h2>{isSignIn ? "Ingresá a tu espacio" : "Creá tu cuenta"}</h2>
+          <h2>{isSignIn ? copy.signInHeading : copy.signUpHeading}</h2>
           <p>
             {isSignIn
-              ? "Retomá el control de tu próxima entrega."
-              : "Empezá con un espacio privado para tus proyectos."}
+              ? copy.signInDescription
+              : copy.signUpDescription}
           </p>
         </div>
       </div>
 
       <div className="auth-field">
-        <label htmlFor={`${prefix}-email`}>Correo electrónico</label>
+        <label htmlFor={`${prefix}-email`}>{copy.email}</label>
         <input
           aria-describedby={
             state.fieldErrors?.email ? `${prefix}-email-error` : undefined
@@ -83,7 +113,7 @@ export function AuthForm({ action, nextPath, variant }: AuthFormProps) {
           inputMode="email"
           maxLength={254}
           name="email"
-          placeholder="vos@ejemplo.com"
+          placeholder={copy.emailPlaceholder}
           required
           type="email"
         />
@@ -95,7 +125,7 @@ export function AuthForm({ action, nextPath, variant }: AuthFormProps) {
       </div>
 
       <div className="auth-field">
-        <label htmlFor={`${prefix}-password`}>Contraseña</label>
+        <label htmlFor={`${prefix}-password`}>{copy.password}</label>
         <input
           aria-describedby={`${prefix}-password-help${
             state.fieldErrors?.password ? ` ${prefix}-password-error` : ""
@@ -110,7 +140,7 @@ export function AuthForm({ action, nextPath, variant }: AuthFormProps) {
           type="password"
         />
         <span className="field-help" id={`${prefix}-password-help`}>
-          Entre 8 y 128 caracteres.
+          {copy.passwordHelp}
         </span>
         {state.fieldErrors?.password ? (
           <span className="field-error" id={`${prefix}-password-error`}>

@@ -26,8 +26,7 @@ async function verifyAuth(): Promise<VerifiedAuth | null> {
     }
 
     return {
-      email:
-        typeof claims.email === "string" ? claims.email : "Cuenta verificada",
+      email: typeof claims.email === "string" ? claims.email : "",
       supabase,
       userId: claims.sub,
     };

@@ -46,11 +46,11 @@ describe("work-item validation", () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.errors).toEqual({
-        description: expect.stringMatching(/2000/),
-        dueDate: expect.stringMatching(/fecha válida/i),
-        priority: expect.stringMatching(/prioridad válida/i),
-        status: expect.stringMatching(/estado válido/i),
-        title: expect.stringMatching(/1 y 120/i),
+        description: expect.stringMatching(/2,000/),
+        dueDate: expect.stringMatching(/valid date/i),
+        priority: expect.stringMatching(/valid priority/i),
+        status: expect.stringMatching(/valid status/i),
+        title: expect.stringMatching(/1 and 120/i),
       });
     }
   });
