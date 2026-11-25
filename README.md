@@ -4,11 +4,11 @@ ReleaseDesk is a focused release-readiness workspace for individual software mak
 
 ## Current status
 
-`RD-001` establishes the Next.js foundation, public Spanish landing page, responsive visual system, route states, and quality scripts. `RD-002` adds the local Supabase project configuration, reproducible schema migration, owner-scoped RLS policies and tests, typed SSR clients, and checked-in database types.
+`RD-001` establishes the Next.js foundation, public Spanish landing page, responsive visual system, route states, and quality scripts. `RD-002` adds the local Supabase project configuration, reproducible schema migration, owner-scoped RLS policies and tests, typed SSR clients, and checked-in database types. `RD-003` adds email/password registration and sign-in actions, email confirmation handling, cookie refresh through the Next.js 16 proxy, sign-out, and a defense-in-depth protected dashboard shell.
 
-The `/login` route remains an honest placeholder until the Supabase authentication increment is implemented.
+Project and work-item CRUD remain intentionally deferred to the next increments. The dashboard currently communicates that state instead of presenting fabricated data.
 
-No remote Supabase or Vercel project is connected at this stage, and no production deployment is claimed.
+Remote Supabase Auth configuration and the production flow have not been verified from this repository, and no deployment result is claimed here.
 
 ## Run locally
 
@@ -41,6 +41,8 @@ Expected public variables for the future integration:
 
 The public app continues to build without these variables. Calling a Supabase client factory before they are configured fails with a clear error that contains no credential value.
 
+Without configuration, `/login` renders an honest setup state and `/dashboard` redirects back to it. Never add a `service_role` or secret key: the browser and SSR clients need only these public values.
+
 ## Connect Supabase later
 
 1. Create a free Supabase project manually.
@@ -62,6 +64,28 @@ The public app continues to build without these variables. Calling a Supabase cl
 The current `src/types/database.ts` is aligned manually with the migration; it is not claimed as remotely generated.
 
 Never add a `service_role` or secret key to this application. ReleaseDesk requires only the public URL and publishable key because authorization is enforced by RLS.
+
+## Configure Supabase Auth
+
+In **Authentication → URL Configuration** set:
+
+- Site URL: `https://releasedesk-three.vercel.app`
+- Redirect URL for local development: `http://localhost:3000/**`
+- Redirect URL for production: `https://releasedesk-three.vercel.app/**`
+
+The registration action passes only one of those trusted origins as `emailRedirectTo`; arbitrary request hosts are never copied into confirmation emails.
+
+For server-side email confirmation, open **Authentication → Email Templates → Confirm signup** and use a token-hash link:
+
+```html
+<a href="{{ .RedirectTo }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/dashboard">
+  Confirmar correo
+</a>
+```
+
+With **Confirm Email** enabled, registration displays a check-your-email state and `/auth/confirm` exchanges the token hash for cookie-backed authentication. With confirmation disabled, Supabase returns a session immediately and registration continues directly to `/dashboard`.
+
+These dashboard settings must be applied and tested manually after the hosted project is connected. Do not create evaluator accounts from automated checks.
 
 ## Local database verification
 

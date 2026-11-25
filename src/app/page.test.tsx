@@ -1,8 +1,13 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/app/login/actions", () => ({
+  signInAction: vi.fn(),
+  signUpAction: vi.fn(),
+}));
 
 import HomePage from "@/app/page";
-import LoginPlaceholderPage from "@/app/login/page";
+import LoginPage from "@/app/login/page";
 
 describe("ReleaseDesk public experience", () => {
   it("explains the product with a semantic primary journey", () => {
@@ -29,11 +34,16 @@ describe("ReleaseDesk public experience", () => {
     ]);
   });
 
-  it("states honestly that authentication is not active yet", () => {
-    render(<LoginPlaceholderPage />);
+  it("explains when the Supabase connection is still pending", async () => {
+    render(await LoginPage({}));
 
-    expect(screen.getByRole("heading", { level: 1, name: /acceso al espacio está en preparación/i })).toBeInTheDocument();
-    expect(screen.getByText(/todavía no solicita ni almacena credenciales/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: /tu próxima entrega empieza con una señal clara/i,
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/conexión pendiente/i)).toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   });
 });
