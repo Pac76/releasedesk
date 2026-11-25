@@ -1,27 +1,89 @@
 # ReleaseDesk
 
-ReleaseDesk is a focused release-readiness workspace for individual software makers. It is being built as a production-minded Next.js assessment with a real Orchestrator → Develop → Testing review loop.
+ReleaseDesk is a release-readiness workspace for individual software makers. It turns projects and their work items into a clear path from backlog to ready while demonstrating a secure, production-minded Next.js and Supabase implementation.
 
-## Current status
+- **Live application:** [releasedesk-three.vercel.app](https://releasedesk-three.vercel.app/)
+- **Public repository:** [github.com/Pac76/releasedesk](https://github.com/Pac76/releasedesk)
 
-`RD-001` establishes the Next.js foundation, public Spanish landing page, responsive visual system, route states, and quality scripts. `RD-002` adds the local Supabase project configuration, reproducible schema migration, owner-scoped RLS policies and tests, typed SSR clients, and checked-in database types. `RD-003` adds email/password registration and sign-in actions, email confirmation handling, cookie refresh through the Next.js 16 proxy, sign-out, and a defense-in-depth protected dashboard shell. `RD-004` adds the owner-scoped project CRUD vertical slice with validated server actions, shared protected workspace navigation, and explicit loading, empty, error, and mutation feedback states. `RD-005` completes the core workspace with project-scoped work-item CRUD, allowlisted URL filters, quick status advancement, overdue identification, and real owner-scoped dashboard metrics and active-work summaries.
+The public landing page has been observed returning HTTP 200 without Vercel Authentication. Hosted Supabase migration, Auth, evaluator-account, and authenticated CRUD verification remain explicit owner steps; see the [deployment checklist](docs/DEPLOYMENT_CHECKLIST.md).
 
-Project and work-item CRUD are available after Supabase is configured and the checked-in migration is applied. Dashboard values are calculated from owned rows rather than fabricated samples. Production hardening and hosted browser verification remain part of `RD-006`.
+## Product capabilities
 
-Remote Supabase Auth configuration and the production flow have not been verified from this repository, and no deployment result is claimed here.
+- Spanish public landing page and responsive release-operations interface.
+- Email/password registration, sign-in, email confirmation, and sign-out through Supabase Auth.
+- Protected dashboard and project routes with verified server-side claims.
+- Project create, edit, list, and confirmed deletion.
+- Project-scoped work-item CRUD, allowlisted status/priority filters, and quick status advancement.
+- Real owner-scoped dashboard counts and active-work summaries.
+- Buenos Aires operational calendar semantics for accurate overdue detection.
+- Loading, empty, error, pending, and success states across the main journeys.
 
-## Run locally
+## Stack
 
-Requirements: Node.js 20.9 or newer and npm.
+- Next.js `16.4.6`, React `19.3.1`, strict TypeScript, and Tailwind CSS.
+- Supabase PostgreSQL, Auth, `@supabase/supabase-js`, and `@supabase/ssr`.
+- Vitest and Testing Library.
+- Vercel production hosting and GitHub Actions CI.
+
+All package versions are exact and committed in `package-lock.json`. CI and the verified local toolchain use Node.js 24 and npm 11.
+
+## Architecture and security
+
+ReleaseDesk uses React Server Components by default and limits Client Components to interactive forms, navigation, and error boundaries. Supabase browser and server factories consume only the public project URL and publishable key.
+
+Security is enforced at multiple layers:
+
+- Next.js 16 Proxy refreshes Supabase cookies with verified claims and protects workspace routes.
+- Protected layouts and every server action independently verify authentication.
+- Every write is normalized and validated on the server.
+- Reads and mutations explicitly filter by the verified owner; work-item mutations also filter by project and item IDs.
+- PostgreSQL RLS provides separate owner-scoped policies for select, insert, update, and delete.
+- The composite foreign key prevents a work item from referencing another owner's project.
+- `anon` has no table privileges; `authenticated` receives only the required CRUD grants.
+- No service-role key, secret key, password, or evaluator credential belongs in this repository.
+- Global response headers deny framing, disable content sniffing, restrict referrers, and disable unused browser capabilities.
+
+The full data contract is in [docs/APP_SPEC.md](docs/APP_SPEC.md), and the reproducible migration is in [supabase/migrations/20261124233226_initial_release_schema.sql](supabase/migrations/20261124233226_initial_release_schema.sql).
+
+## Local setup
+
+Requirements: Node.js 24.x and npm 11.x.
 
 ```bash
-npm install
+git clone https://github.com/Pac76/releasedesk.git
+cd releasedesk
+npm ci
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). The public landing page and production build work without Supabase variables. Authentication and protected data require a configured project.
 
-## Quality checks
+Create an ignored `.env.local` only for local integration:
+
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+```
+
+Only those two public values are supported. Never add a `service_role` or secret key.
+
+## Supabase and Vercel setup
+
+The exact owner sequence is maintained in [docs/DEPLOYMENT_CHECKLIST.md](docs/DEPLOYMENT_CHECKLIST.md). In summary:
+
+1. Create or select a Supabase project and apply the checked-in migration.
+2. Run database advisors and the pgTAP policy suites from an environment where the Supabase stack/remote connection works.
+3. Configure the Supabase Auth Site URL, redirect allowlist, and token-hash confirmation template.
+4. Add the two public environment variables to the intended Vercel environments and redeploy.
+5. Create evaluator credentials outside Git, verify authenticated CRUD and cross-user isolation, then confirm the production domain remains public in an incognito session.
+
+The checked-in `src/types/database.ts` matches the migration but is not claimed as remotely generated. After connecting the project, regenerate and review it with:
+
+```bash
+npx supabase gen types --remote=<project-ref> --lang=typescript --schema public > src/types/database.ts
+```
+
+## Quality commands
 
 ```bash
 npm run lint
@@ -30,66 +92,9 @@ npm test
 npm run build
 ```
 
-## Environment
+GitHub Actions runs `npm ci` followed by those four checks on pushes and pull requests to `main`. CI requires no Supabase or Vercel secrets because the public application must remain buildable without configuration.
 
-Copy `.env.example` to `.env.local` only when the Supabase project exists. Never commit `.env.local` or real credentials.
-
-Expected public variables for the future integration:
-
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-
-The public app continues to build without these variables. Calling a Supabase client factory before they are configured fails with a clear error that contains no credential value.
-
-Without configuration, `/login` renders an honest setup state and protected routes such as `/dashboard` and `/projects` redirect back to it. Never add a `service_role` or secret key: the browser and SSR clients need only these public values.
-
-## Connect Supabase later
-
-1. Create a free Supabase project manually.
-2. Open the project's **Connect** dialog and copy only the Project URL and publishable key into a local `.env.local` file:
-
-   ```dotenv
-   NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
-   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
-   ```
-
-3. Apply `supabase/migrations/20261124233226_initial_release_schema.sql` to the project. This can be pasted into the Supabase SQL Editor, or applied later through an intentionally linked CLI workflow.
-4. Verify Database API exposure if the project disables automatic table exposure. The migration already revokes defaults, grants only `select`, `insert`, `update`, and `delete` to `authenticated`, and gives `anon` no table access.
-5. Regenerate the checked-in database types from the connected project and review the diff:
-
-   ```bash
-   npx supabase gen types --remote=<project-ref> --lang=typescript --schema public > src/types/database.ts
-   ```
-
-The current `src/types/database.ts` is aligned manually with the migration; it is not claimed as remotely generated.
-
-Never add a `service_role` or secret key to this application. ReleaseDesk requires only the public URL and publishable key because authorization is enforced by RLS.
-
-## Configure Supabase Auth
-
-In **Authentication → URL Configuration** set:
-
-- Site URL: `https://releasedesk-three.vercel.app`
-- Redirect URL for local development: `http://localhost:3000/**`
-- Redirect URL for production: `https://releasedesk-three.vercel.app/**`
-
-The registration action passes only one of those trusted origins as `emailRedirectTo`; arbitrary request hosts are never copied into confirmation emails.
-
-For server-side email confirmation, open **Authentication → Email Templates → Confirm signup** and use a token-hash link:
-
-```html
-<a href="{{ .RedirectTo }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/dashboard">
-  Confirmar correo
-</a>
-```
-
-With **Confirm Email** enabled, registration displays a check-your-email state and `/auth/confirm` exchanges the token hash for cookie-backed authentication. With confirmation disabled, Supabase returns a session immediately and registration continues directly to `/dashboard`.
-
-These dashboard settings must be applied and tested manually after the hosted project is connected. Do not create evaluator accounts from automated checks.
-
-## Local database verification
-
-Docker is required for the local Supabase stack. The CLI is pinned in `devDependencies`, so no global installation is needed.
+For a working local Docker stack, database verification is:
 
 ```bash
 npx supabase start
@@ -97,21 +102,37 @@ npx supabase db reset
 npx supabase test db
 ```
 
-`db reset` applies all migrations and the intentionally empty `supabase/seed.sql`. The pgTAP tests prove anonymous denial, owner CRUD, cross-user isolation, composite owner/project integrity, and project deletion cascades.
+The Windows host used during RD-002 could not start the Supabase local stack because of a CLI wrapper argument issue, so the SQL suites were reviewed but not falsely reported as executed. They remain available under `supabase/tests/`.
 
-To regenerate types from the local database instead:
+## Repository map
 
-```bash
-npx supabase gen types --lang=typescript --schema public > src/types/database.ts
+```text
+src/app/                 App Router pages, server actions, and route states
+src/components/          Focused interactive and presentational components
+src/lib/                 Auth, validation, Supabase, and domain helpers
+src/types/database.ts    Migration-aligned Supabase database types
+supabase/migrations/     Reproducible PostgreSQL schema and RLS
+supabase/tests/          pgTAP ownership and policy tests
+agents/                  Develop and Testing operating directives
+.codex/agents/           Custom-agent definitions
+docs/agent-runs/         Truthful task/review evidence
+.github/workflows/       Secret-free CI
 ```
 
-## Agent workflow
+## Three-agent workflow
 
-- `AGENTS.md` defines the Orchestrator and mandatory review loop.
-- `.codex/agents/develop.toml` and `agents/DEVELOP.md` configure implementation work.
-- `.codex/agents/testing.toml` and `agents/TESTING.md` configure independent read-only QA.
-- `docs/AGENT_WORKFLOW.md` defines the evidence and increment plan.
-- `docs/agent-runs/` contains truthful summaries of completed review cycles.
+`AGENTS.md` defines the Orchestrator. It creates bounded increments, delegates implementation to the custom `develop` agent, and then delegates independent read-only review to `testing`. A rejected review returns to Develop as a focused correction before Testing reviews again. The Orchestrator integrates only approved work and records real outcomes rather than fabricated agent transcripts.
 
-Product scope and security requirements live in `docs/APP_SPEC.md`.
+Evidence for each completed increment:
 
+- [RD-001 — Next.js foundation and public landing](docs/agent-runs/RD-001.md)
+- [RD-002 — Supabase schema, RLS, and typed clients](docs/agent-runs/RD-002.md)
+- [RD-003 — Authentication and protected workspace](docs/agent-runs/RD-003.md)
+- [RD-004 — Owner-scoped project CRUD](docs/agent-runs/RD-004.md)
+- [RD-005 — Work-item CRUD, filters, dashboard, and date correction](docs/agent-runs/RD-005.md)
+
+The protocol and increment plan are documented in [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md). RD-006 evidence is added by the Orchestrator only after independent review and final verification.
+
+## Assessment handoff
+
+[docs/SUBMISSION.md](docs/SUBMISSION.md) is a safe delivery template. It intentionally contains no private submission URL, password, token, or invented answer. Evaluator credentials and the four form answers must be supplied separately after the hosted integration has been verified.
