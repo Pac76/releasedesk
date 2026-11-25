@@ -42,6 +42,15 @@ function itemsBuilder(result: { data: unknown[] | null; error: unknown }) {
   return { builder, firstOrder, secondOrder, select };
 }
 
+function snapshotBuilder(result: { data: unknown[] | null; error: unknown }) {
+  const limit = vi.fn().mockResolvedValue(result);
+  const order = vi.fn().mockReturnValue({ limit });
+  const builder = { eq: vi.fn(), order };
+  builder.eq.mockReturnValue(builder);
+  const select = vi.fn().mockReturnValue(builder);
+  return { builder, limit, order, select };
+}
+
 function setupQueries({
   items = [],
   project = [
@@ -49,26 +58,32 @@ function setupQueries({
       description: "Release scope",
       id: projectId,
       name: "November release",
+      repository_full_name: null,
       target_date: "2026-11-30",
     },
   ],
+  snapshots = [],
 }: {
   items?: unknown[];
   project?: unknown[];
+  snapshots?: unknown[];
 } = {}) {
   const projectQuery = projectBuilder({ data: project, error: null });
   const itemQuery = itemsBuilder({ data: items, error: null });
+  const snapshotQuery = snapshotBuilder({ data: snapshots, error: null });
   const from = vi.fn((table: string) =>
     table === "projects"
       ? { select: projectQuery.select }
-      : { select: itemQuery.select },
+      : table === "work_items"
+        ? { select: itemQuery.select }
+        : { select: snapshotQuery.select },
   );
   mocks.getVerifiedAuth.mockResolvedValue({
     email: "owner@example.test",
     supabase: { from },
     userId: ownerId,
   });
-  return { from, itemQuery, projectQuery };
+  return { from, itemQuery, projectQuery, snapshotQuery };
 }
 
 describe("ProjectDetailPage", () => {
@@ -109,6 +124,8 @@ describe("ProjectDetailPage", () => {
       "project_id",
       projectId,
     );
+    expect(queries.snapshotQuery.builder.eq).toHaveBeenCalledWith("project_id", projectId);
+    expect(queries.snapshotQuery.builder.eq).toHaveBeenCalledWith("owner_id", ownerId);
     expect(queries.itemQuery.builder.eq).toHaveBeenCalledWith(
       "owner_id",
       ownerId,
@@ -125,6 +142,40 @@ describe("ProjectDetailPage", () => {
       screen.getByRole("heading", { name: "November release" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Confirm release notes")).toBeInTheDocument();
+  });
+
+  it("renders the latest repository evidence and deterministic verdict", async () => {
+    setupQueries({
+      project: [{
+        description: "Release scope",
+        id: projectId,
+        name: "November release",
+        repository_full_name: "owner/repo",
+        target_date: "2026-11-30",
+      }],
+      snapshots: [{
+        captured_at: "2026-11-25T12:00:00Z",
+        default_branch: "main",
+        head_committed_at: new Date().toISOString(),
+        head_sha: "a".repeat(40),
+        id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+        open_issues: 0,
+        open_pull_requests: 0,
+        owner_id: ownerId,
+        project_id: projectId,
+        repository_full_name: "owner/repo",
+        workflow_status: "success",
+      }],
+    });
+
+    render(await ProjectDetailPage({
+      params: Promise.resolve({ projectId }),
+      searchParams: Promise.resolve({}),
+    }));
+
+    expect(screen.getByRole("link", { name: "owner/repo" })).toHaveAttribute("href", "https://github.com/owner/repo");
+    expect(screen.getByText("Listo", { selector: ".readiness-verdict" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /por qué releasedesk decide/i })).toBeInTheDocument();
   });
 
   it("ignores invalid URL filters without changing authorization filters", async () => {
@@ -188,10 +239,13 @@ describe("ProjectDetailPage", () => {
       error: { message: "private database detail" },
     });
     const itemQuery = itemsBuilder({ data: [], error: null });
+    const snapshotQuery = snapshotBuilder({ data: [], error: null });
     const from = vi.fn((table: string) =>
       table === "projects"
         ? { select: projectQuery.select }
-        : { select: itemQuery.select },
+        : table === "work_items"
+          ? { select: itemQuery.select }
+          : { select: snapshotQuery.select },
     );
     mocks.getVerifiedAuth.mockResolvedValue({
       email: "owner@example.test",

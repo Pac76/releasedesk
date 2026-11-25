@@ -3,6 +3,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import {
+  syncRepositoryAction,
+} from "@/app/projects/actions";
+import { RepositoryHealth } from "@/components/projects/repository-health";
+import {
   changeWorkItemStatusAction,
   createWorkItemAction,
   deleteWorkItemAction,
@@ -60,7 +64,7 @@ export default async function ProjectDetailPage({
   const filters = parseWorkItemFilters(await searchParams);
   const projectQuery = auth.supabase
     .from("projects")
-    .select("id, name, description, target_date")
+    .select("id, name, description, target_date, repository_full_name")
     .eq("id", projectId)
     .eq("owner_id", auth.userId)
     .limit(1);
@@ -80,14 +84,23 @@ export default async function ProjectDetailPage({
     itemsQuery = itemsQuery.eq("priority", filters.priority);
   }
 
-  const [projectResult, itemResult] = await Promise.all([
+  const snapshotQuery = auth.supabase
+    .from("repository_snapshots")
+    .select("id, owner_id, project_id, repository_full_name, default_branch, head_sha, head_committed_at, workflow_status, open_pull_requests, open_issues, captured_at")
+    .eq("project_id", projectId)
+    .eq("owner_id", auth.userId)
+    .order("captured_at", { ascending: false })
+    .limit(1);
+
+  const [projectResult, itemResult, snapshotResult] = await Promise.all([
     projectQuery,
     itemsQuery
       .order("due_date", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false }),
+    snapshotQuery,
   ]);
 
-  if (projectResult.error || itemResult.error) {
+  if (projectResult.error || itemResult.error || snapshotResult.error) {
     throw new Error("Project work could not be loaded.");
   }
 
@@ -115,6 +128,13 @@ export default async function ProjectDetailPage({
           <strong>{formatTargetDate(project.target_date)}</strong>
         </div>
       </header>
+
+      <RepositoryHealth
+        action={syncRepositoryAction}
+        currentRepository={project.repository_full_name}
+        projectId={projectId}
+        snapshot={snapshotResult.data?.[0] ?? null}
+      />
 
       <section className="work-create" aria-labelledby="create-work-title">
         <div className="work-create-copy">

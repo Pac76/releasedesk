@@ -4,6 +4,8 @@
 
 ReleaseDesk is a focused release-readiness workspace for individual software makers. It turns projects and their work items into a clear path from backlog to ready-for-release while demonstrating a secure, production-minded full-stack implementation.
 
+ReleaseDesk also acts as a project-operations control plane for independent developers. A project can connect to a public GitHub repository, capture repository-health snapshots, and produce an evidence-backed readiness verdict. Repository intelligence is derived from external signals rather than manually imitating another task list.
+
 The UI is Spanish. Code, identifiers, commits, and technical documentation are English.
 
 ## Stack
@@ -33,6 +35,15 @@ ReleaseDesk treats `America/Argentina/Buenos_Aires` as the operational calendar 
 - Show total projects, total work items, items in progress, items in review, ready items, and overdue items.
 - Show a useful upcoming/recent work-item list and navigation to projects.
 - Provide loading, empty, and error states.
+
+### Repository intelligence
+
+- A signed-in owner can connect one public GitHub repository to a project using an `owner/repository` identifier.
+- A manual sync reads the default branch, current head commit, latest GitHub Actions run, open pull requests, and open issues through the GitHub REST API.
+- Every successful sync stores an immutable owner-scoped snapshot so readiness decisions remain auditable.
+- A deterministic policy engine reports `ready`, `at_risk`, `blocked`, or `unknown` together with the exact evidence used for the verdict.
+- The project page shows the latest snapshot, repository link, sync timestamp, operational signals, and policy evidence.
+- GitHub OAuth, private repositories, background sync, Vercel correlation, notifications, and AI summaries remain later increments.
 
 ### Projects
 
@@ -78,6 +89,22 @@ Use UUID primary keys and `timestamptz` timestamps.
 
 Enforce a work item's owner/project consistency in the database as well as server logic. Add indexes justified by the dashboard and list queries.
 
+### `repository_snapshots`
+
+- `id uuid primary key`
+- `owner_id uuid not null references auth.users(id) on delete cascade`
+- `project_id uuid not null` with composite owner consistency against `projects`
+- `repository_full_name text not null`
+- `default_branch text not null`
+- `head_sha text not null`
+- `head_committed_at timestamptz not null`
+- `workflow_status text not null` with an explicit allowlist
+- `open_pull_requests integer not null`
+- `open_issues integer not null`
+- `captured_at timestamptz not null default now()`
+
+Snapshots are immutable through the client API. Authenticated users receive only `select` and `insert`; ownership policies protect both operations. The linked repository identifier is stored on the owning project.
+
 ## Security
 
 - Enable RLS on every exposed table.
@@ -112,5 +139,5 @@ Enforce a work item's owner/project consistency in the database as well as serve
 7. Server-side validation produces clear UI feedback.
 8. Desktop and mobile layouts include loading, empty, success, and error states.
 9. Lint, typecheck, tests, and production build pass.
-10. The production Vercel URL is public, repository credentials are absent, and an evaluator account can be supplied separately.
+10. The production Vercel URL is public, repository credentials are absent, and demo access can be supplied separately.
 

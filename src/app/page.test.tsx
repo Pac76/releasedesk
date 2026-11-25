@@ -13,10 +13,11 @@ describe("ReleaseDesk public experience", () => {
   it("explains the product with a semantic primary journey", () => {
     render(<HomePage />);
 
-    expect(screen.getByRole("heading", { level: 1, name: /llegá a cada entrega/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: /señales de github/i })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: /navegación principal/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /crear mi espacio/i })).toHaveAttribute("href", "/login");
-    expect(screen.getByRole("progressbar", { name: /82 por ciento completado/i })).toHaveAttribute("aria-valuenow", "82");
+    expect(screen.getByRole("list", { name: /señales del repositorio/i })).toBeInTheDocument();
+    expect(screen.getByText("acme/checkout")).toBeInTheDocument();
   });
 
   it("presents all four release stages in order", () => {

@@ -1624,6 +1624,133 @@ a {
   padding: clamp(42px, 7vw, 88px);
 }
 
+.repository-panel {
+  background: var(--paper, #fffdf8);
+  border: 1px solid rgba(18, 36, 52, 0.16);
+  border-radius: 1.25rem;
+  display: grid;
+  gap: 1.5rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.repository-heading,
+.repository-form,
+.snapshot-summary,
+.repository-signals {
+  display: flex;
+  gap: 1rem;
+}
+
+.repository-heading {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.repository-heading h2,
+.readiness-evidence h3 {
+  color: var(--ink);
+  margin: 0.25rem 0;
+}
+
+.repository-heading p,
+.repository-empty {
+  color: var(--muted);
+  margin: 0;
+}
+
+.readiness-verdict {
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  flex: none;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 0.45rem 0.75rem;
+  text-transform: uppercase;
+}
+
+.readiness-ready { color: #176b4d; }
+.readiness-at_risk { color: #9a5b08; }
+.readiness-blocked { color: #a3342b; }
+.readiness-unknown { color: #5d6470; }
+
+.repository-form {
+  align-items: flex-end;
+}
+
+.repository-form .field-group {
+  flex: 1;
+}
+
+.repository-form input {
+  width: 100%;
+}
+
+.repository-snapshot {
+  border-top: 1px solid rgba(18, 36, 52, 0.12);
+  display: grid;
+  gap: 1.25rem;
+  padding-top: 1.5rem;
+}
+
+.snapshot-summary,
+.repository-signals {
+  flex-wrap: wrap;
+}
+
+.snapshot-summary > div,
+.repository-signals > div {
+  display: grid;
+  flex: 1 1 10rem;
+  gap: 0.25rem;
+}
+
+.snapshot-summary span,
+.repository-signals dt {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.snapshot-summary a {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.repository-signals {
+  background: rgba(18, 36, 52, 0.04);
+  border-radius: 0.9rem;
+  margin: 0;
+  padding: 1rem;
+}
+
+.repository-signals dd {
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 750;
+  margin: 0;
+}
+
+.readiness-evidence ul {
+  color: var(--muted);
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+}
+
+@media (max-width: 680px) {
+  .repository-heading,
+  .repository-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .readiness-verdict {
+    align-self: flex-start;
+  }
+}
+
 .project-breadcrumb {
   align-items: center;
   color: #6c7a80;

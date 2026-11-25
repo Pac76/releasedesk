@@ -3,6 +3,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  fetchPublicRepositorySnapshot: vi.fn(),
   getVerifiedAuth: vi.fn(),
   revalidatePath: vi.fn(),
 }));
@@ -11,13 +12,24 @@ vi.mock("@/lib/auth/verified-user", () => ({
   getVerifiedAuth: mocks.getVerifiedAuth,
 }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
+vi.mock("@/lib/github/client", () => ({
+  fetchPublicRepositorySnapshot: mocks.fetchPublicRepositorySnapshot,
+  GitHubClientError: class GitHubClientError extends Error {
+    constructor(public readonly code: string) {
+      super(code);
+    }
+  },
+}));
 
 import {
   createProjectAction,
   deleteProjectAction,
+  syncRepositoryAction,
   updateProjectAction,
 } from "@/app/projects/actions";
 import { INITIAL_PROJECT_ACTION_STATE } from "@/lib/projects/action-state";
+import { INITIAL_REPOSITORY_SYNC_STATE } from "@/lib/github/action-state";
+import { GitHubClientError } from "@/lib/github/client";
 
 const ownerId = "11111111-1111-4111-8111-111111111111";
 const projectId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
@@ -188,5 +200,87 @@ describe("project server actions", () => {
       "No pudimos crear el proyecto. Intentá nuevamente.",
     );
     expect(state.message).not.toContain("private database policy detail");
+  });
+
+  it("verifies project ownership before GitHub and persists one atomic snapshot", async () => {
+    const limit = vi.fn().mockResolvedValue({ data: [{ id: projectId }], error: null });
+    const ownerEq = vi.fn().mockReturnValue({ limit });
+    const idEq = vi.fn().mockReturnValue({ eq: ownerEq });
+    const select = vi.fn().mockReturnValue({ eq: idEq });
+    const from = vi.fn().mockReturnValue({ select });
+    const rpc = vi.fn().mockResolvedValue({ error: null });
+    mocks.getVerifiedAuth.mockResolvedValue({
+      email: "owner@example.test",
+      supabase: { from, rpc },
+      userId: ownerId,
+    });
+    mocks.fetchPublicRepositorySnapshot.mockResolvedValue({
+      default_branch: "main",
+      head_committed_at: "2026-11-25T10:00:00Z",
+      head_sha: "a".repeat(40),
+      open_issues: 1,
+      open_pull_requests: 2,
+      repository_full_name: "owner/repo",
+      workflow_status: "success",
+    });
+    const data = new FormData();
+    data.set("project_id", projectId);
+    data.set("repository_full_name", " Owner/Repo ");
+
+    const state = await syncRepositoryAction(INITIAL_REPOSITORY_SYNC_STATE, data);
+
+    expect(idEq).toHaveBeenCalledWith("id", projectId);
+    expect(ownerEq).toHaveBeenCalledWith("owner_id", ownerId);
+    expect(mocks.fetchPublicRepositorySnapshot).toHaveBeenCalledWith("owner/repo");
+    expect(rpc).toHaveBeenCalledWith("capture_repository_snapshot", expect.objectContaining({
+      p_project_id: projectId,
+      p_repository_full_name: "owner/repo",
+      p_open_issues: 1,
+      p_open_pull_requests: 2,
+    }));
+    expect(state.status).toBe("success");
+  });
+
+  it("rejects invalid repository input before database or upstream access", async () => {
+    const from = vi.fn();
+    mocks.getVerifiedAuth.mockResolvedValue({
+      email: "owner@example.test",
+      supabase: { from },
+      userId: ownerId,
+    });
+    const data = new FormData();
+    data.set("project_id", projectId);
+    data.set("repository_full_name", "https://github.com/owner/repo");
+
+    const state = await syncRepositoryAction(INITIAL_REPOSITORY_SYNC_STATE, data);
+
+    expect(state.status).toBe("error");
+    expect(state.fieldError).toMatch(/formato público/i);
+    expect(from).not.toHaveBeenCalled();
+    expect(mocks.fetchPublicRepositorySnapshot).not.toHaveBeenCalled();
+  });
+
+  it("maps GitHub rate limits to safe Spanish feedback without persisting", async () => {
+    const limit = vi.fn().mockResolvedValue({ data: [{ id: projectId }], error: null });
+    const ownerEq = vi.fn().mockReturnValue({ limit });
+    const idEq = vi.fn().mockReturnValue({ eq: ownerEq });
+    const select = vi.fn().mockReturnValue({ eq: idEq });
+    const from = vi.fn().mockReturnValue({ select });
+    const rpc = vi.fn();
+    mocks.getVerifiedAuth.mockResolvedValue({
+      email: "owner@example.test",
+      supabase: { from, rpc },
+      userId: ownerId,
+    });
+    mocks.fetchPublicRepositorySnapshot.mockRejectedValue(new GitHubClientError("rate_limited"));
+    const data = new FormData();
+    data.set("project_id", projectId);
+    data.set("repository_full_name", "owner/repo");
+
+    const state = await syncRepositoryAction(INITIAL_REPOSITORY_SYNC_STATE, data);
+
+    expect(state.message).toMatch(/límite de consultas/i);
+    expect(state.message).not.toContain("rate_limited");
+    expect(rpc).not.toHaveBeenCalled();
   });
 });
