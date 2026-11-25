@@ -7,11 +7,11 @@ export default function DashboardLoading() {
         <span className="loading-line loading-line-title" />
       </div>
       <div className="metric-grid">
-        {Array.from({ length: 4 }, (_, index) => (
+        {Array.from({ length: 6 }, (_, index) => (
           <span className="metric-card loading-metric" key={index} />
         ))}
       </div>
-      <span className="dashboard-empty loading-panel" />
+      <span className="dashboard-work loading-panel" />
     </main>
   );
 }

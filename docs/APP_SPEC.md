@@ -15,6 +15,10 @@ The UI is Spanish. Code, identifiers, commits, and technical documentation are E
 
 Use exact compatible package versions in the lockfile. Do not commit secrets.
 
+## Calendar convention
+
+ReleaseDesk treats `America/Argentina/Buenos_Aires` as the operational calendar timezone for this MVP. Database due dates and target dates remain canonical `YYYY-MM-DD` values. Any meaning of “today” or “overdue” must derive calendar parts in that timezone rather than from the UTC date. A work item is overdue only when its due date is before the operational current date and its status is not `ready`.
+
 ## MVP journeys
 
 ### Public and authentication

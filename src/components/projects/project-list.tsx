@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import type { ProjectServerAction } from "@/components/projects/project-form";
 import { DeleteProjectForm } from "@/components/projects/delete-project-form";
 import { ProjectForm } from "@/components/projects/project-form";
@@ -63,8 +65,16 @@ export function ProjectList({
                 <span>{formatTargetDate(project.target_date)}</span>
                 <span>Preparación de entrega</span>
               </div>
-              <h3>{project.name}</h3>
+              <h3>
+                <Link href={`/projects/${project.id}`}>{project.name}</Link>
+              </h3>
               <p>{project.description || "Sin descripción."}</p>
+              <Link
+                className="project-detail-link"
+                href={`/projects/${project.id}`}
+              >
+                Abrir trabajo del proyecto
+              </Link>
             </div>
 
             <details className="project-editor">

@@ -4,9 +4,9 @@ ReleaseDesk is a focused release-readiness workspace for individual software mak
 
 ## Current status
 
-`RD-001` establishes the Next.js foundation, public Spanish landing page, responsive visual system, route states, and quality scripts. `RD-002` adds the local Supabase project configuration, reproducible schema migration, owner-scoped RLS policies and tests, typed SSR clients, and checked-in database types. `RD-003` adds email/password registration and sign-in actions, email confirmation handling, cookie refresh through the Next.js 16 proxy, sign-out, and a defense-in-depth protected dashboard shell. `RD-004` adds the owner-scoped project CRUD vertical slice with validated server actions, shared protected workspace navigation, and explicit loading, empty, error, and mutation feedback states.
+`RD-001` establishes the Next.js foundation, public Spanish landing page, responsive visual system, route states, and quality scripts. `RD-002` adds the local Supabase project configuration, reproducible schema migration, owner-scoped RLS policies and tests, typed SSR clients, and checked-in database types. `RD-003` adds email/password registration and sign-in actions, email confirmation handling, cookie refresh through the Next.js 16 proxy, sign-out, and a defense-in-depth protected dashboard shell. `RD-004` adds the owner-scoped project CRUD vertical slice with validated server actions, shared protected workspace navigation, and explicit loading, empty, error, and mutation feedback states. `RD-005` completes the core workspace with project-scoped work-item CRUD, allowlisted URL filters, quick status advancement, overdue identification, and real owner-scoped dashboard metrics and active-work summaries.
 
-Project CRUD is available after Supabase is configured. Work-item CRUD and real dashboard metrics remain intentionally deferred to `RD-005`; the dashboard communicates that state instead of presenting fabricated data.
+Project and work-item CRUD are available after Supabase is configured and the checked-in migration is applied. Dashboard values are calculated from owned rows rather than fabricated samples. Production hardening and hosted browser verification remain part of `RD-006`.
 
 Remote Supabase Auth configuration and the production flow have not been verified from this repository, and no deployment result is claimed here.
 
@@ -41,7 +41,7 @@ Expected public variables for the future integration:
 
 The public app continues to build without these variables. Calling a Supabase client factory before they are configured fails with a clear error that contains no credential value.
 
-Without configuration, `/login` renders an honest setup state and `/dashboard` redirects back to it. Never add a `service_role` or secret key: the browser and SSR clients need only these public values.
+Without configuration, `/login` renders an honest setup state and protected routes such as `/dashboard` and `/projects` redirect back to it. Never add a `service_role` or secret key: the browser and SSR clients need only these public values.
 
 ## Connect Supabase later
 
