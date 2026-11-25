@@ -1,2 +1,2 @@
 -- ReleaseDesk intentionally has no shared seed data.
--- Evaluator accounts and user-owned records are created outside source control.
+-- Demo accounts and user-owned records are created outside source control.

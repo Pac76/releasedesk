@@ -1,15 +1,18 @@
 # ReleaseDesk
 
-ReleaseDesk is a release-readiness workspace for individual software makers. It turns projects and their work items into a clear path from backlog to ready while demonstrating a secure, production-minded Next.js and Supabase implementation.
+ReleaseDesk is a project-operations control plane for software releases. It combines delivery work with immutable snapshots of public GitHub repository signals, then applies a deterministic policy that explains whether a release is ready, at risk, blocked, or still unknown.
 
 - **Live application:** [releasedesk-three.vercel.app](https://releasedesk-three.vercel.app/)
 - **Public repository:** [github.com/Pac76/releasedesk](https://github.com/Pac76/releasedesk)
 
-The public landing page has been observed returning HTTP 200 without Vercel Authentication. Hosted Supabase migration, Auth, evaluator-account, and authenticated CRUD verification remain explicit owner steps; see the [deployment checklist](docs/DEPLOYMENT_CHECKLIST.md).
+The product is actively developed around traceable release decisions. The hosted schema, Auth flow, owner-scoped CRUD, repository capture RPC, and anonymous denial have been exercised against the production Supabase project; see the [deployment checklist](docs/DEPLOYMENT_CHECKLIST.md) for reproducible operations.
 
 ## Product capabilities
 
 - Spanish public landing page and responsive release-operations interface.
+- Manual connection and refresh of one public GitHub repository per project.
+- Immutable snapshots of the default branch, head commit, latest GitHub Actions run, open pull requests, and open issues.
+- Deterministic readiness verdicts with visible evidence rather than opaque scoring.
 - Email/password registration, sign-in, email confirmation, and sign-out through Supabase Auth.
 - Protected dashboard and project routes with verified server-side claims.
 - Project create, edit, list, and confirmed deletion.
@@ -39,11 +42,12 @@ Security is enforced at multiple layers:
 - Reads and mutations explicitly filter by the verified owner; work-item mutations also filter by project and item IDs.
 - PostgreSQL RLS provides separate owner-scoped policies for select, insert, update, and delete.
 - The composite foreign key prevents a work item from referencing another owner's project.
+- Repository snapshots use the same composite ownership boundary, are insert/select-only, and are captured atomically with the linked project through a security-invoker database function.
 - `anon` has no table privileges; `authenticated` receives only the required CRUD grants.
-- No service-role key, secret key, password, or evaluator credential belongs in this repository.
+- No service-role key, secret key, password, or demo credential belongs in this repository.
 - Global response headers deny framing, disable content sniffing, restrict referrers, and disable unused browser capabilities.
 
-The full data contract is in [docs/APP_SPEC.md](docs/APP_SPEC.md), and the reproducible migration is in [supabase/migrations/20261124233226_initial_release_schema.sql](supabase/migrations/20261124233226_initial_release_schema.sql).
+The full data contract is in [docs/APP_SPEC.md](docs/APP_SPEC.md). Reproducible schema changes live under [supabase/migrations](supabase/migrations/).
 
 ## Local setup
 
@@ -63,19 +67,21 @@ Create an ignored `.env.local` only for local integration:
 ```dotenv
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+# Optional server-only token for a higher GitHub API rate limit:
+GITHUB_TOKEN=your-fine-grained-token
 ```
 
-Only those two public values are supported. Never add a `service_role` or secret key.
+The two Supabase values are publishable browser configuration. `GITHUB_TOKEN` is optional, server-only, and must never use a `NEXT_PUBLIC_` prefix. Never add a Supabase `service_role` or secret key.
 
 ## Supabase and Vercel setup
 
 The exact owner sequence is maintained in [docs/DEPLOYMENT_CHECKLIST.md](docs/DEPLOYMENT_CHECKLIST.md). In summary:
 
-1. Create or select a Supabase project and apply the checked-in migration.
+1. Create or select a Supabase project and apply all checked-in migrations in timestamp order.
 2. Run database advisors and the pgTAP policy suites from an environment where the Supabase stack/remote connection works.
 3. Configure the Supabase Auth Site URL, redirect allowlist, and token-hash confirmation template.
 4. Add the two public environment variables to the intended Vercel environments and redeploy.
-5. Create evaluator credentials outside Git, verify authenticated CRUD and cross-user isolation, then confirm the production domain remains public in an incognito session.
+5. Create demo credentials outside Git, verify authenticated CRUD and repository synchronization, then confirm the production domain remains public in a signed-out browser.
 
 The checked-in `src/types/database.ts` matches the migration but is not claimed as remotely generated. After connecting the project, regenerate and review it with:
 
@@ -102,7 +108,7 @@ npx supabase db reset
 npx supabase test db
 ```
 
-The Windows host used during RD-002 could not start the Supabase local stack because of a CLI wrapper argument issue, so the SQL suites were reviewed but not falsely reported as executed. They remain available under `supabase/tests/`.
+The hosted migrations and live repository-capture flow were verified on the production Supabase project. The pinned CLI's Docker wrapper still cannot mount this Windows workspace path for pgTAP, so the checked-in SQL suites remain available for Linux/WSL/CI execution rather than being falsely reported as run.
 
 ## Repository map
 
@@ -130,9 +136,13 @@ Evidence for each completed increment:
 - [RD-003 — Authentication and protected workspace](docs/agent-runs/RD-003.md)
 - [RD-004 — Owner-scoped project CRUD](docs/agent-runs/RD-004.md)
 - [RD-005 — Work-item CRUD, filters, dashboard, and date correction](docs/agent-runs/RD-005.md)
+- [RD-006 — Production hardening and delivery verification](docs/agent-runs/RD-006.md)
+- [RD-007 — GitHub repository intelligence and readiness evidence](docs/agent-runs/RD-007.md)
 
-The protocol and increment plan are documented in [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md). RD-006 evidence is added by the Orchestrator only after independent review and final verification.
+The protocol and increment plan are documented in [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md). Each increment record is added only after independent review and final verification.
 
-## Assessment handoff
+## Product direction
 
-[docs/SUBMISSION.md](docs/SUBMISSION.md) is a safe delivery template. It intentionally contains no private submission URL, password, token, or invented answer. Evaluator credentials and the four form answers must be supplied separately after the hosted integration has been verified.
+Repository intelligence is intentionally bounded to one public repository per project and manual refresh. OAuth, private repositories, background sync, deployment correlation, and AI-generated verdicts remain outside the current product surface.
+
+For a concise product narrative, engineering highlights, verification evidence, and roadmap, see [docs/PROJECT_PROFILE.md](docs/PROJECT_PROFILE.md).
