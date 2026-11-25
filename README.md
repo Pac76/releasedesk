@@ -4,9 +4,9 @@ ReleaseDesk is a focused release-readiness workspace for individual software mak
 
 ## Current status
 
-`RD-001` establishes the Next.js foundation, public Spanish landing page, responsive visual system, route states, and quality scripts. `RD-002` adds the local Supabase project configuration, reproducible schema migration, owner-scoped RLS policies and tests, typed SSR clients, and checked-in database types. `RD-003` adds email/password registration and sign-in actions, email confirmation handling, cookie refresh through the Next.js 16 proxy, sign-out, and a defense-in-depth protected dashboard shell.
+`RD-001` establishes the Next.js foundation, public Spanish landing page, responsive visual system, route states, and quality scripts. `RD-002` adds the local Supabase project configuration, reproducible schema migration, owner-scoped RLS policies and tests, typed SSR clients, and checked-in database types. `RD-003` adds email/password registration and sign-in actions, email confirmation handling, cookie refresh through the Next.js 16 proxy, sign-out, and a defense-in-depth protected dashboard shell. `RD-004` adds the owner-scoped project CRUD vertical slice with validated server actions, shared protected workspace navigation, and explicit loading, empty, error, and mutation feedback states.
 
-Project and work-item CRUD remain intentionally deferred to the next increments. The dashboard currently communicates that state instead of presenting fabricated data.
+Project CRUD is available after Supabase is configured. Work-item CRUD and real dashboard metrics remain intentionally deferred to `RD-005`; the dashboard communicates that state instead of presenting fabricated data.
 
 Remote Supabase Auth configuration and the production flow have not been verified from this repository, and no deployment result is claimed here.
 

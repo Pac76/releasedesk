@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Panel",
@@ -20,8 +21,8 @@ export default function DashboardPage() {
           <h1>Tu mesa de entrega está lista.</h1>
         </div>
         <p>
-          La conexión segura ya está preparada. Los proyectos y señales de
-          avance se habilitan en el próximo incremento.
+          Ya podés administrar proyectos. Las métricas de trabajo y avance se
+          habilitan en el próximo incremento, sin inventar datos intermedios.
         </p>
       </header>
 
@@ -30,7 +31,7 @@ export default function DashboardPage() {
           <article className="metric-card" key={metric.label}>
             <span>{metric.label}</span>
             <strong>{metric.value}</strong>
-            <small>Sin datos todavía</small>
+            <small>Disponible con trabajo real</small>
           </article>
         ))}
       </section>
@@ -40,17 +41,16 @@ export default function DashboardPage() {
           RD
         </div>
         <div>
-          <p className="eyebrow eyebrow-dark">Siguiente señal</p>
-          <h2 id="empty-title">Todavía no hay proyectos en este espacio.</h2>
+          <p className="eyebrow eyebrow-dark">Primera señal</p>
+          <h2 id="empty-title">Prepará el proyecto de tu próxima entrega.</h2>
           <p>
-            En el siguiente incremento vas a poder crear el primero, definir
-            su fecha objetivo y ordenar el trabajo hasta dejarlo listo para
-            publicar.
+            Definí el objetivo, la fecha y el contexto. El trabajo y sus
+            estados se sumarán en el siguiente incremento.
           </p>
         </div>
-        <span className="dashboard-next-action" aria-disabled="true">
-          Crear proyecto · próximamente
-        </span>
+        <Link className="button button-ink" href="/projects">
+          Gestionar proyectos
+        </Link>
       </section>
     </main>
   );

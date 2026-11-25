@@ -40,7 +40,10 @@ describe("authentication redirect safety", () => {
   it("recognizes the dashboard route tree only", () => {
     expect(isProtectedPath("/dashboard")).toBe(true);
     expect(isProtectedPath("/dashboard/projects/one")).toBe(true);
+    expect(isProtectedPath("/projects")).toBe(true);
+    expect(isProtectedPath("/projects/one")).toBe(true);
     expect(isProtectedPath("/dashboarding")).toBe(false);
+    expect(isProtectedPath("/project-settings")).toBe(false);
     expect(isProtectedPath("/login")).toBe(false);
   });
 });

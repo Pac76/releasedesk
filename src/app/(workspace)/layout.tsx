@@ -4,32 +4,18 @@ import type { ReactNode } from "react";
 
 import { signOutAction } from "@/app/login/actions";
 import { BrandMark } from "@/components/brand-mark";
-import { createClient } from "@/lib/supabase/server";
+import { WorkspaceNavigation } from "@/components/workspace-navigation";
+import { getVerifiedAuth } from "@/lib/auth/verified-user";
 
-type DashboardLayoutProps = Readonly<{ children: ReactNode }>;
+type WorkspaceLayoutProps = Readonly<{ children: ReactNode }>;
 
-export default async function DashboardLayout({
+export default async function WorkspaceLayout({
   children,
-}: DashboardLayoutProps) {
-  let email = "Cuenta verificada";
-  let isAuthenticated = false;
+}: WorkspaceLayoutProps) {
+  const auth = await getVerifiedAuth();
 
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.getClaims();
-    const claims = data?.claims;
-
-    isAuthenticated = !error && Boolean(claims?.sub);
-
-    if (typeof claims?.email === "string") {
-      email = claims.email;
-    }
-  } catch {
-    isAuthenticated = false;
-  }
-
-  if (!isAuthenticated) {
-    redirect("/login?next=%2Fdashboard");
+  if (!auth) {
+    redirect("/login");
   }
 
   return (
@@ -44,20 +30,11 @@ export default async function DashboardLayout({
           <span>ReleaseDesk</span>
         </Link>
 
-        <nav aria-label="Navegación del espacio" className="dashboard-nav">
-          <Link aria-current="page" href="/dashboard">
-            <span aria-hidden="true">01</span>
-            Resumen
-          </Link>
-          <span aria-disabled="true">
-            <span aria-hidden="true">02</span>
-            Proyectos · próximo
-          </span>
-        </nav>
+        <WorkspaceNavigation />
 
         <div className="dashboard-account">
           <span>Sesión verificada</span>
-          <strong title={email}>{email}</strong>
+          <strong title={auth.email}>{auth.email}</strong>
           <form action={signOutAction}>
             <button className="dashboard-signout" type="submit">
               Cerrar sesión
@@ -78,6 +55,7 @@ export default async function DashboardLayout({
             </button>
           </form>
         </header>
+        <WorkspaceNavigation mobile />
         {children}
       </div>
     </div>

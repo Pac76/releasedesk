@@ -58,24 +58,32 @@ describe("Supabase auth proxy", () => {
       "/login",
       "/auth/confirm",
       "/dashboard/:path*",
+      "/projects/:path*",
     ]);
   });
 
-  it("redirects an unauthenticated dashboard request", async () => {
+  it.each([
+    [
+      "dashboard",
+      "http://localhost:3000/dashboard?view=ready",
+      "http://localhost:3000/login?next=%2Fdashboard%3Fview%3Dready",
+    ],
+    [
+      "projects",
+      "http://localhost:3000/projects",
+      "http://localhost:3000/login?next=%2Fprojects",
+    ],
+  ])("redirects an unauthenticated %s request", async (_route, url, expected) => {
     mocks.createServerClient.mockReturnValue({
       auth: {
         getClaims: vi.fn().mockResolvedValue({ data: null, error: null }),
       },
     });
 
-    const response = await updateSession(
-      new NextRequest("http://localhost:3000/dashboard?view=ready"),
-    );
+    const response = await updateSession(new NextRequest(url));
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe(
-      "http://localhost:3000/login?next=%2Fdashboard%3Fview%3Dready",
-    );
+    expect(response.headers.get("location")).toBe(expected);
     expectNoCacheHeaders(response);
   });
 
